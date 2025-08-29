@@ -9,9 +9,10 @@ load_dotenv()
 
 Base = declarative_base()
 
+
 class BankAccountTransaction(Base):
-    __tablename__ = 'bank_account_transactions'
-    
+    __tablename__ = "bank_account_transactions"
+
     id = Column(String, primary_key=True)
     date = Column(DateTime, nullable=False)
     amount = Column(Numeric(12, 2), nullable=False)
@@ -21,9 +22,10 @@ class BankAccountTransaction(Base):
     source_file = Column(String(255))
     imported_at = Column(DateTime, default=datetime.now)
 
+
 class CreditCardTransaction(Base):
-    __tablename__ = 'credit_card_transactions'
-    
+    __tablename__ = "credit_card_transactions"
+
     id = Column(String, primary_key=True)
     date = Column(DateTime, nullable=False)
     amount = Column(Numeric(12, 2), nullable=False)
@@ -33,15 +35,18 @@ class CreditCardTransaction(Base):
     source_file = Column(String(255))
     imported_at = Column(DateTime, default=datetime.now)
 
+
 # Database setup
 DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
 
+
 def create_tables():
     """Create database tables"""
     Base.metadata.create_all(engine)
     print("✅ Database tables created")
+
 
 def get_db():
     """Get database session"""
