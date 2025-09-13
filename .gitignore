@@ -13,3 +13,6 @@ wheels/
 data/
 .ipynb_checkpoints
 .env
+
+
+finance.db

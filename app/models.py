@@ -1,14 +1,8 @@
-from sqlalchemy import create_engine, Column, String, Numeric, DateTime, Text
+from sqlalchemy import Column, String, Numeric, DateTime, Text
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
 from datetime import datetime
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
 
 Base = declarative_base()
-
 
 class BankAccountTransaction(Base):
     __tablename__ = "bank_account_transactions"
@@ -30,24 +24,34 @@ class CreditCardTransaction(Base):
     date = Column(DateTime, nullable=False)
     amount = Column(Numeric(12, 2), nullable=False)
     description = Column(Text, nullable=False)
-    chase_category = Column(String(100))
+    category = Column(String(100))
     card_number = Column(String(10), nullable=True)
     source_file = Column(String(255))
     imported_at = Column(DateTime, default=datetime.now)
 
 
-# Database setup
-DATABASE_URL = os.getenv("DATABASE_URL")
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(bind=engine)
+# Column mappings from raw csv files to db schema
+def get_chase_credit_card_mapping():
+    """Column mapping for Chase Credit Card CSV"""
+    return {
+        "Transaction Date": "date",
+        "Post Date": "post_date",
+        "Description": "description",
+        "Category": "category",
+        "Type": "transaction_type",
+        "Amount": "amount",
+        "Memo": "memo",
+    }
 
 
-def create_tables():
-    """Create database tables"""
-    Base.metadata.create_all(engine)
-    print("✅ Database tables created")
-
-
-def get_db():
-    """Get database session"""
-    return SessionLocal()
+def get_chase_bank_account_mapping():
+    """Column mapping for Chase Bank Account CSV"""
+    return {
+        "Details": "details",
+        "Posting Date": "date",
+        "Description": "description",
+        "Amount": "amount",
+        "Type": "type",
+        "Balance": "balance",
+        "Check or Slip #": "check_number",
+    }

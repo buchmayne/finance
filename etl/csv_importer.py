@@ -1,59 +1,52 @@
+from abc import ABC, abstractmethod
+from enum import Enum
+from dataclasses import dataclass
 import re
 import pandas as pd
 import hashlib
 from pathlib import Path
 from datetime import datetime
-from models import BankAccountTransaction, CreditCardTransaction, get_db, create_tables
+from app.models import (
+    BankAccountTransaction,
+    CreditCardTransaction,
+    get_chase_bank_account_mapping,
+    get_chase_credit_card_mapping
+)
+from database import get_db
 
 
-# Column mappings
-def get_chase_credit_card_mapping():
-    """Column mapping for Chase Credit Card CSV"""
-    return {
-        "Transaction Date": "date",
-        "Post Date": "post_date",
-        "Description": "description",
-        "Category": "chase_category",
-        "Type": "transaction_type",
-        "Amount": "amount",
-        "Memo": "memo",
-    }
+class AccountType(Enum):
+    BANK_ACCOUNT : str = "bank_account"
+    CREDIT_CARD : str = "credit_card"
 
 
-def get_chase_bank_account_mapping():
-    """Column mapping for Chase Bank Account CSV"""
-    return {
-        "Details": "details",
-        "Posting Date": "date",
-        "Description": "description",
-        "Amount": "amount",
-        "Type": "type",
-        "Balance": "balance",
-        "Check or Slip #": "check_number",
-    }
+@dataclass
+class PathCSVDirectories:
+    project_root : Path = Path(__file__).parent.parent
+    base_dir : Path = project_root / "data" / "csv_files"
+    bank_accounts_dir : Path = base_dir / "bank_accounts"
+    credit_cards_dir : Path = base_dir / "credit_cards"
 
-
-class SimpleCSVImporter:
+class CSVImporter(ABC):
     def __init__(self):
         self.db = get_db()
 
-    def preview_csv(self, file_path: str) -> pd.DataFrame:
+    def preview(self, file_path: str) -> pd.DataFrame:
         """Preview CSV file structure"""
         df = pd.read_csv(file_path, nrows=5)
-
         print(f"\n📄 File: {Path(file_path).name}")
         print(f"📊 Shape: {df.shape}")
         print(f"📝 Columns: {list(df.columns)}")
         print("\n🔍 Sample data:")
         print(df.to_string())
         return df
-
+    
     def _generate_id(self, row) -> str:
         """Generate unique ID for transaction"""
         # Create hash from date + amount + description
         content = f"{row['date']}{row['amount']}{str(row['description'])[:50]}"
         return hashlib.md5(content.encode()).hexdigest()[:12]
-
+    
     def _extract_chase_account(self, file_path: str) -> str | None:
         patterns = [
             r"Chase\s*\d{4}",
@@ -72,9 +65,17 @@ class SimpleCSVImporter:
         """Close database connection"""
         if self.db:
             self.db.close()
+    
+    @abstractmethod
+    def import_csv(self):
+        pass
 
+    @abstractmethod
+    def _clean_data(self):
+        pass
 
-class BankAccountCSVImporter(SimpleCSVImporter):
+    
+class BankAccountCSVImporter(CSVImporter):
 
     def import_csv(
         self, file_path: str, column_mapping: dict, dry_run: bool = True
@@ -148,8 +149,8 @@ class BankAccountCSVImporter(SimpleCSVImporter):
         return df
 
 
-class CreditCardCSVImporter(SimpleCSVImporter):
-
+class CreditCardCSVImporter(CSVImporter):
+    
     def import_csv(
         self, file_path: str, column_mapping: dict, dry_run: bool = True
     ) -> pd.DataFrame:
@@ -182,7 +183,7 @@ class CreditCardCSVImporter(SimpleCSVImporter):
                 date=row["date"],
                 amount=row["amount"],
                 description=row["description"],
-                chase_category=row.get("chase_category", "Other"),
+                category=row.get("category", "Other"),
                 card_number=card_number,
                 source_file=Path(file_path).name,
             )
@@ -224,3 +225,116 @@ class CreditCardCSVImporter(SimpleCSVImporter):
             df["chase_category"] = "Other"
 
         return df
+
+
+def process_csv_file(
+        importer : CSVImporter,
+        file_path : str,
+        account_type: AccountType,
+        dry_run : bool
+    ) -> dict:
+    """Process a single CSV file"""
+    print(f"\n{'='*60}")
+    print(f"📄 Processing: {file_path}")
+    print(f"{'='*60}")
+
+    try:
+        if account_type == AccountType.BANK_ACCOUNT:
+            column_mapping = get_chase_bank_account_mapping()
+        elif account_type == AccountType.CREDIT_CARD:
+            column_mapping = get_chase_credit_card_mapping()
+        else:
+            ValueError, "Account Type Not Supported"
+
+        # Preview first
+        print("👀 PREVIEW:")
+        importer.preview(file_path)
+
+        # Import
+        print(f"\n🔄 IMPORTING with {account_type} mapping:")
+        print(f"Column mapping: {column_mapping}")
+
+        df = importer.import_csv(
+            str(file_path), column_mapping=column_mapping, dry_run=dry_run
+        )
+
+        return {"file": file_path, "status": "success", "rows": len(df), "error": None}
+
+    except Exception as e:
+        print(f"❌ Error processing {file_path}: {e}")
+        return {"file": file_path, "status": "error", "rows": 0, "error": str(e)}
+
+
+def process_all_csv_files(
+        folder_path: Path,
+        account_type: AccountType,
+        dry_run: bool, 
+        file_pattern: str = "*.csv"
+    ) -> None:
+    """Process all CSV files in a folder"""
+    folder = Path(folder_path)
+
+    if not folder.exists():
+        print(f"❌ Folder does not exist: {folder}")
+        return
+
+    # Find all CSV files (case-insensitive)
+    csv_files = []
+
+    # Handle case-insensitive matching
+    if file_pattern.lower() == "*.csv":
+        # Default case: find both .csv and .CSV files
+        csv_files.extend(folder.glob("*.csv"))
+        csv_files.extend(folder.glob("*.CSV"))
+
+    # Remove duplicates (in case a file matches multiple patterns)
+    csv_files = list(set(csv_files))
+
+    if not csv_files:
+        print(f"❌ No CSV files found in {folder} matching pattern '{file_pattern}'")
+        return
+
+    print(f"📁 Found {len(csv_files)} CSV files in {folder}")
+    print("Files to process:")
+    for f in csv_files:
+        print(f"  • {f.name}")
+
+    # Process each file
+    results = []
+
+    if account_type == AccountType.BANK_ACCOUNT:
+        importer = BankAccountCSVImporter()
+    elif account_type == AccountType.CREDIT_CARD:
+        importer = CreditCardCSVImporter()
+    else:
+        ValueError, "Account Type Not Supported"
+
+    try:
+        for csv_file in csv_files:
+            result = process_csv_file(importer, csv_file, account_type, dry_run)
+            results.append(result)
+    finally:
+        importer.close()
+
+    # Summary report
+    print(f"\n{'='*60}")
+    print("📊 BATCH PROCESSING SUMMARY")
+    print(f"{'='*60}")
+
+    successful = [r for r in results if r["status"] == "success"]
+    failed = [r for r in results if r["status"] == "error"]
+    total_rows = sum(r["rows"] for r in successful)
+
+    print(f"✅ Successful: {len(successful)} files")
+    print(f"❌ Failed: {len(failed)} files")
+    print(f"📈 Total rows processed: {total_rows}")
+
+    if successful:
+        print(f"\n✅ Successfully processed:")
+        for result in successful:
+            print(f"  • {result['file']}: {result['rows']} rows")
+
+    if failed:
+        print(f"\n❌ Failed files:")
+        for result in failed:
+            print(f"  • {result['file']}: {result['error']}")
