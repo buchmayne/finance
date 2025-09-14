@@ -2,10 +2,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from app.models import (
     Base,
-    BankAccountTransaction,
-    CreditCardTransaction,
 )
-from config import Settings
+from etl.config import Settings
 
 # Database setup
 engine = create_engine(Settings.database_url)
