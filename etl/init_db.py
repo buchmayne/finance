@@ -1,10 +1,15 @@
 from pathlib import Path
+from sqlalchemy import text
 from app.models import Base
-from database import engine
+from database import engine, get_db
 from csv_importer import (
     process_all_csv_files,
     PathCSVDirectories,
     AccountType
+)
+from queries import (
+    create_credit_card_tx_clean,
+    create_bank_account_tx_clean
 )
 
 def create_tables():
@@ -33,3 +38,13 @@ if __name__ == "__main__":
     )
 
     print("Database Initialized")
+    
+    # Run ETL queries to create new tables
+    db = get_db()
+    
+    db.execute(text(create_bank_account_tx_clean))
+    db.execute(text(create_credit_card_tx_clean))
+
+    db.close()
+
+    
