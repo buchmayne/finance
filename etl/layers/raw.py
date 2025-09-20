@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
-import pandas as pd
 import re
 import hashlib
 from pathlib import Path
-from etl.database import get_db, engine
+import pandas as pd
+from etl.database import get_db
 from etl.types import AccountType, PathCSVDirectories
 from etl.schema import create_raw_schema
 from app.models import (
