@@ -446,7 +446,7 @@ def _categorize_individual_credit_card_transaction(description: str) -> str:
     elif 'OPAL CAMERA' in description:
         return 'COMPUTERS_TECHNOLOGY_HARDWARE'
     elif 'USPS PO' in description or 'FEDEX OFFIC' in description:
-        'SHIPPING'
+        return 'SHIPPING'
     elif 'RODEO' in description:
         return 'RODEO'
     elif 'ENTERPRISE RENT' in description or 'AMTRAK' in description:
