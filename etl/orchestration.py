@@ -11,7 +11,7 @@ class ETLPipeline:
                 marts.create_monthly_spending_by_category_tbl,
                 marts.create_monthly_spending_by_meta_category_tbl,
                 marts.create_unified_transactions_tbl,
-                marts.create_monthly_savings_tbl
+                marts.create_monthly_savings_tbl,
             ],
         }
     

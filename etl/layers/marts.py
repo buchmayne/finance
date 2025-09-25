@@ -132,6 +132,7 @@ def create_monthly_salary_tbl() -> None:
                 index=False
             )
         )
+        db.commit()
         print(f"✅ Created marts_monthly_salary")
     finally:
         db.close()
@@ -153,6 +154,7 @@ def create_monthly_cash_flow_tbl() -> None:
                 index=False
             )
         )
+        db.commit()
         print(f"✅ Created marts_monthly_cash_flow")
     finally:
         db.close()
@@ -174,6 +176,7 @@ def create_monthly_spending_by_category_tbl() -> None:
                 index=False
             )
         )
+        db.commit()
         print(f"✅ Created marts_monthly_spending_by_category")
     finally:
         db.close()
@@ -187,7 +190,7 @@ def create_monthly_spending_by_meta_category_tbl() -> None:
             .pipe(drop_savings_from_tx_tbl)
             .pipe(assign_categories_to_concepts)
             .groupby(['year', 'month', 'meta_category'], as_index=False)
-            .agg(concept_spending=('amount', 'sum'))
+            .agg(total_spend=('amount', 'sum'))
             .sort_values(['year', 'month', 'meta_category'], ascending=[True, True, True])
             .to_sql(
                 'marts_monthly_spending_by_meta_category', 
@@ -196,6 +199,7 @@ def create_monthly_spending_by_meta_category_tbl() -> None:
                 index=False
             )
         )
+        db.commit()
         print(f"✅ Created marts_monthly_spending_by_meta_category")
     finally:
         db.close()
@@ -207,6 +211,7 @@ def create_unified_transactions_tbl() -> None:
         (
             create_unified_transactions()
             .pipe(drop_savings_from_tx_tbl)
+            .pipe(assign_categories_to_concepts)
             .to_sql(
                 'marts_unified_transactions',
                 db.connection(),
@@ -214,6 +219,7 @@ def create_unified_transactions_tbl() -> None:
                 index=False
             )
         )
+        db.commit()
         print(f"✅ Created marts_unified_transactions")
     finally:
         db.close()
@@ -238,6 +244,8 @@ def create_monthly_savings_tbl() -> None:
                 index=False
             )
         )
+        db.commit()
         print(f"✅ Created marts_monthly_savings")
     finally:
         db.close()
+
