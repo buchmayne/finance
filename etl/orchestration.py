@@ -1,12 +1,18 @@
-from etl.layers import raw, staging
+from etl.layers import raw, staging, marts
 
 class ETLPipeline:
     def __init__(self):
         self.layers = {
             'raw': [raw.import_bank_accounts, raw.import_credit_cards],
             'staging': [staging.create_staging_bank_account_transactions, staging.create_staging_credit_card_transactions], 
-            # 'marts': [marts.create_categorized_transactions],
-            # 'metrics': [metrics.create_monthly_spending_summary]
+            'marts': [
+                marts.create_monthly_salary_tbl,
+                marts.create_monthly_cash_flow_tbl,
+                marts.create_monthly_spending_by_category_tbl,
+                marts.create_monthly_spending_by_meta_category_tbl,
+                marts.create_unified_transactions_tbl,
+                marts.create_monthly_savings_tbl
+            ],
         }
     
     def run_layer(self, layer_name: str):
@@ -20,6 +26,5 @@ class ETLPipeline:
     
     def run_full_pipeline(self):
         """Run entire pipeline in dependency order"""
-        # for layer_name in ['raw', 'staging', 'marts', 'metrics']:
-        for layer_name in ['raw', 'staging']:
+        for layer_name in ['raw', 'staging', 'marts']:
             self.run_layer(layer_name)

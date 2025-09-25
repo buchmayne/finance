@@ -20,7 +20,7 @@ def _prepare_credit_card_tx_for_union(df: pd.DataFrame) -> pd.DataFrame:
         .assign(source='credit_card')
     )
 
-def create_unified_transactions() -> None:
+def create_unified_transactions() -> pd.DataFrame:
     staging_bank_acc_tx_query = """SELECT * FROM staging_bank_account_transactions"""
     staging_cc_tx_query = """SELECT * FROM staging_credit_card_transactions"""
     
@@ -38,7 +38,7 @@ def create_unified_transactions() -> None:
 
     return unified_transactions
 
-def create_savings_table(df: pd.DataFrame) -> pd.DataFrame:
+def subset_transactions_on_savings(df: pd.DataFrame) -> pd.DataFrame:
     """Savings are defined as transfers to/from investment accounts"""
     return (
         df
@@ -68,7 +68,7 @@ def assign_categories_to_concepts(df: pd.DataFrame) -> pd.DataFrame:
 
     return (
         df
-        .assign(concept=np.select(
+        .assign(meta_category=np.select(
             [
                 df['category'].isin(['MORTGAGE_PAYMENT', 'HOA_PAYMENT']),
                 df['category'].isin(['JENNA_WEDDING_ACCT_TRANSFERS', 'WEDDING_PHOTOGRAPHER', 'WEDDING']),
@@ -115,45 +115,129 @@ def assign_categories_to_concepts(df: pd.DataFrame) -> pd.DataFrame:
         ))
     )
 
-if __name__ == "__main__":
-    
-    base_df = create_unified_transactions()
-    savings_df = create_savings_table(base_df)
+def create_monthly_salary_tbl() -> None:
+    db = get_db()
+    try:
+        (
+            create_unified_transactions()
+            .pipe(drop_savings_from_tx_tbl)
+            .loc[lambda df_: df_['category'] == 'SALARY']
+            .groupby(['year', 'month'], as_index=False)
+            .agg(salary=('amount', 'sum'))
+            .sort_values(['year', 'month'], ascending=[True, True])
+            .to_sql(
+                'marts_monthly_salary', 
+                db.connection(), 
+                if_exists='replace', 
+                index=False
+            )
+        )
+        print(f"✅ Created marts_monthly_salary")
+    finally:
+        db.close()
 
-    # drop savings from transactions table
-    tx_df = drop_savings_from_tx_tbl(base_df)
+def create_monthly_cash_flow_tbl() -> None:
+    db = get_db()
+    try:
+        (
+            create_unified_transactions()
+            .pipe(drop_savings_from_tx_tbl)
+            .groupby(['year', 'month'], as_index=False)
+            .agg(cash_flow=('amount', 'sum'))
+            .sort_values(['year', 'month'], ascending=[True, True])
+            .assign(cumulative_cash_flow=lambda df_: df_['cash_flow'].cumsum())
+            .to_sql(
+                'marts_monthly_cash_flow', 
+                db.connection(), 
+                if_exists='replace', 
+                index=False
+            )
+        )
+        print(f"✅ Created marts_monthly_cash_flow")
+    finally:
+        db.close()
 
-    monthly_income = (
-        tx_df
-        .loc[tx_df['category'] == 'SALARY']
-        .groupby(['year', 'month'], as_index=False)
-        .agg(salary=('amount', 'sum'))
-    )
 
-    monthly_cash_flow = (
-        tx_df
-        .groupby(['year', 'month'], as_index=False)
-        .agg(cash_flow=('amount', 'sum'))
-        .assign(cumulative_cash_flow=lambda df_: df_['cash_flow'].cumsum())
-    )
+def create_monthly_spending_by_category_tbl() -> None:
+    db = get_db()
+    try:
+        (
+            create_unified_transactions()
+            .pipe(drop_savings_from_tx_tbl)
+            .groupby(['year', 'month', 'category'], as_index=False)
+            .agg(total_spend=('amount', 'sum'))
+            .sort_values(['year', 'month'], ascending=[True, True])
+            .to_sql(
+                'marts_monthly_spending_by_category', 
+                db.connection(), 
+                if_exists='replace', 
+                index=False
+            )
+        )
+        print(f"✅ Created marts_monthly_spending_by_category")
+    finally:
+        db.close()
 
-    monthly_spending_by_category = (
-        tx_df
-        .groupby(['year', 'month', 'category'], as_index=False)
-        .agg(total_spend=('amount', 'sum'))
-    )
 
-    monthly_savings = (
-        savings_df
-        .groupby(['year', 'month'], as_index=False)
-        .agg(savings=('amount', 'sum'))
-        .assign(cumulative_savings=lambda df_: df_['savings'].cumsum())
-    )
+def create_monthly_spending_by_meta_category_tbl() -> None:
+    db = get_db()
+    try: 
+        (
+            create_unified_transactions()
+            .pipe(drop_savings_from_tx_tbl)
+            .pipe(assign_categories_to_concepts)
+            .groupby(['year', 'month', 'meta_category'], as_index=False)
+            .agg(concept_spending=('amount', 'sum'))
+            .sort_values(['year', 'month', 'meta_category'], ascending=[True, True, True])
+            .to_sql(
+                'marts_monthly_spending_by_meta_category', 
+                db.connection(), 
+                if_exists='replace', 
+                index=False
+            )
+        )
+        print(f"✅ Created marts_monthly_spending_by_meta_category")
+    finally:
+        db.close()
 
-    annual_spend_by_concept = (
-        assign_categories_to_concepts(tx_df)
-        .groupby(['concept', 'year'], as_index=False)
-        .agg(concept_spending=('amount', 'sum'))
-    )
 
-    print(annual_spend_by_concept)
+def create_unified_transactions_tbl() -> None:
+    db = get_db()
+    try:
+        (
+            create_unified_transactions()
+            .pipe(drop_savings_from_tx_tbl)
+            .to_sql(
+                'marts_unified_transactions',
+                db.connection(),
+                if_exists='replace',
+                index=False
+            )
+        )
+        print(f"✅ Created marts_unified_transactions")
+    finally:
+        db.close()
+
+
+# Savings table
+def create_monthly_savings_tbl() -> None:
+    """Sum savings by year-month and write marts_monthly_savings tbl to db"""
+    db = get_db()
+    try:
+        (
+            create_unified_transactions()
+            .pipe(subset_transactions_on_savings)
+            .groupby(['year', 'month'], as_index=False)
+            .agg(savings=('amount', 'sum'))
+            .sort_values(['year', 'month'], ascending=[True, True])
+            .assign(cumulative_savings=lambda df_: df_['savings'].cumsum())
+            .to_sql(
+                'marts_monthly_savings', 
+                db.connection(), 
+                if_exists='replace', 
+                index=False
+            )
+        )
+        print(f"✅ Created marts_monthly_savings")
+    finally:
+        db.close()
