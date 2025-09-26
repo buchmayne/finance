@@ -161,7 +161,7 @@ def create_spending_tbl() -> None:
             .pipe(drop_income_from_tx_tbl)
             .pipe(assign_categories_to_meta_categories)
             # spending is recorded as a deduction but for reporting we want it to be a positive value
-            .pipe(amount=lambda df_: df_['amount'] * -1) 
+            .assign(amount=lambda df_: df_['amount'] * -1) 
             .to_sql(
                 'marts_spending',
                 db.connection(),
