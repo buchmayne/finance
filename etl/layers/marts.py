@@ -2,6 +2,12 @@ import pandas as pd
 import numpy as np
 from etl.database import get_db
 
+
+# Parameters
+INCOME_CATEGORIES = ['SALARY', 'CASH_DEPOSIT', 'TAX_REFUND', 'ACCOUNT_INTEREST', 'PORTLAND_ARTS_TAX', 'FILING_TAXES']
+SAVINGS_CATEGORIES = ['TRANSFER_TO_BROKERAGE', 'TRANSFER_FROM_BROKERAGE']
+
+
 def _prepare_bank_account_tx_for_union(df: pd.DataFrame) -> pd.DataFrame:
     return (
         df
@@ -42,15 +48,19 @@ def subset_transactions_on_savings(df: pd.DataFrame) -> pd.DataFrame:
     """Savings are defined as transfers to/from investment accounts"""
     return (
         df
-        .loc[df['category'].isin(['TRANSFER_TO_BROKERAGE', 'TRANSFER_FROM_BROKERAGE'])]
+        .loc[df['category'].isin(SAVINGS_CATEGORIES)]
         .assign(amount=lambda df_: df_['amount'] * -1) # transfer to brokerage is a deduction from bank account but increase in savings
     )
 
 def drop_savings_from_tx_tbl(df: pd.DataFrame) -> pd.DataFrame:
     """Remove savings from transaction table to better identify patterns in spending and earning"""
-    return df.loc[~df['category'].isin(['TRANSFER_TO_BROKERAGE', 'TRANSFER_FROM_BROKERAGE'])]
+    return df.loc[~df['category'].isin(SAVINGS_CATEGORIES)]
 
-def assign_categories_to_concepts(df: pd.DataFrame) -> pd.DataFrame:
+def drop_income_from_tx_tbl(df: pd.DataFrame) -> pd.DataFrame:
+    """Remove income from transaction table to better identify patterns in spending"""
+    return df.loc[~df['category'].isin([INCOME_CATEGORIES])]
+
+def assign_categories_to_meta_categories(df: pd.DataFrame) -> pd.DataFrame:
     """Group categories together into concepts for easier analysis"""
     subscriptions = [
         'PODCAST_SUBSCRIPTION', 
@@ -73,7 +83,8 @@ def assign_categories_to_concepts(df: pd.DataFrame) -> pd.DataFrame:
                 df['category'].isin(['MORTGAGE_PAYMENT', 'HOA_PAYMENT']),
                 df['category'].isin(['JENNA_WEDDING_ACCT_TRANSFERS', 'WEDDING_PHOTOGRAPHER', 'WEDDING']),
                 df['category'].isin(subscriptions),
-                df['category'].isin(['SALARY', 'CASH_DEPOSIT', 'TAX_REFUND', 'ACCOUNT_INTEREST', 'CASH_WITHDRAWL', 'PORTLAND_ARTS_TAX', 'FILING_TAXES']),
+                df['category'].isin(['SALARY', 'CASH_DEPOSIT', 'TAX_REFUND', 'ACCOUNT_INTEREST', 'PORTLAND_ARTS_TAX', 'FILING_TAXES']),
+                df['category'].isin(['CASH_WITHDRAWL']),
                 df['category'].isin(['CAR_INSURANCE', 'DIAMOND_INSURANCE', 'COBRA_PAYMENTS']),
                 df['category'].isin(['CELL_PHONE_BILL', 'COMCAST', 'PGE', 'HAIRCUT']),
                 df['category'].isin(['FAST_FOOD', 'OVATION_WEEKEND', 'EATING_OUT_NBHD_LUNCH', 'OVATION_WEEKDAY', 'EATING_OUT', 'DOMINOS', 'OTHER_COFFEE_SHOPS', 'NBHD_BARS']),
@@ -95,6 +106,7 @@ def assign_categories_to_concepts(df: pd.DataFrame) -> pd.DataFrame:
                 'WEDDING',
                 'ENTERTAINMENT_SUBSCRIPTIONS',
                 'INCOME',
+                'CASH_WITHDRAWL',
                 'INSURANCE',
                 'UTILITIES',
                 'EATING_OUT',
@@ -115,137 +127,95 @@ def assign_categories_to_concepts(df: pd.DataFrame) -> pd.DataFrame:
         ))
     )
 
-def create_monthly_salary_tbl() -> None:
+## Create Tables in DB for cleaned Transactions, Spending, Income, Savings
+def create_transactions_tbl() -> None:
+    """Clean transactions data with meta categories"""
     db = get_db()
     try:
         (
             create_unified_transactions()
             .pipe(drop_savings_from_tx_tbl)
-            .loc[lambda df_: df_['category'] == 'SALARY']
-            .groupby(['year', 'month'], as_index=False)
-            .agg(salary=('amount', 'sum'))
-            .sort_values(['year', 'month'], ascending=[True, True])
+            .pipe(assign_categories_to_meta_categories)
             .to_sql(
-                'marts_monthly_salary', 
-                db.connection(), 
-                if_exists='replace', 
-                index=False
-            )
-        )
-        db.commit()
-        print(f"✅ Created marts_monthly_salary")
-    finally:
-        db.close()
-
-def create_monthly_cash_flow_tbl() -> None:
-    db = get_db()
-    try:
-        (
-            create_unified_transactions()
-            .pipe(drop_savings_from_tx_tbl)
-            .groupby(['year', 'month'], as_index=False)
-            .agg(cash_flow=('amount', 'sum'))
-            .sort_values(['year', 'month'], ascending=[True, True])
-            .assign(cumulative_cash_flow=lambda df_: df_['cash_flow'].cumsum())
-            .to_sql(
-                'marts_monthly_cash_flow', 
-                db.connection(), 
-                if_exists='replace', 
-                index=False
-            )
-        )
-        db.commit()
-        print(f"✅ Created marts_monthly_cash_flow")
-    finally:
-        db.close()
-
-
-def create_monthly_spending_by_category_tbl() -> None:
-    db = get_db()
-    try:
-        (
-            create_unified_transactions()
-            .pipe(drop_savings_from_tx_tbl)
-            .groupby(['year', 'month', 'category'], as_index=False)
-            .agg(total_spend=('amount', 'sum'))
-            .sort_values(['year', 'month'], ascending=[True, True])
-            .to_sql(
-                'marts_monthly_spending_by_category', 
-                db.connection(), 
-                if_exists='replace', 
-                index=False
-            )
-        )
-        db.commit()
-        print(f"✅ Created marts_monthly_spending_by_category")
-    finally:
-        db.close()
-
-
-def create_monthly_spending_by_meta_category_tbl() -> None:
-    db = get_db()
-    try: 
-        (
-            create_unified_transactions()
-            .pipe(drop_savings_from_tx_tbl)
-            .pipe(assign_categories_to_concepts)
-            .groupby(['year', 'month', 'meta_category'], as_index=False)
-            .agg(total_spend=('amount', 'sum'))
-            .sort_values(['year', 'month', 'meta_category'], ascending=[True, True, True])
-            .to_sql(
-                'marts_monthly_spending_by_meta_category', 
-                db.connection(), 
-                if_exists='replace', 
-                index=False
-            )
-        )
-        db.commit()
-        print(f"✅ Created marts_monthly_spending_by_meta_category")
-    finally:
-        db.close()
-
-
-def create_unified_transactions_tbl() -> None:
-    db = get_db()
-    try:
-        (
-            create_unified_transactions()
-            .pipe(drop_savings_from_tx_tbl)
-            .pipe(assign_categories_to_concepts)
-            .to_sql(
-                'marts_unified_transactions',
+                'marts_transactions',
                 db.connection(),
                 if_exists='replace',
                 index=False
             )
         )
         db.commit()
-        print(f"✅ Created marts_unified_transactions")
+        print(f"✅ Created marts_transactions table")
     finally:
         db.close()
 
 
-# Savings table
-def create_monthly_savings_tbl() -> None:
-    """Sum savings by year-month and write marts_monthly_savings tbl to db"""
+def create_spending_tbl() -> None:
+    """
+    Extract all spending by removing income and savings from transactions.
+    """
+    db = get_db()
+    try:
+        (
+            create_unified_transactions()
+            .pipe(drop_savings_from_tx_tbl)
+            .pipe(drop_income_from_tx_tbl)
+            .pipe(assign_categories_to_meta_categories)
+            # spending is recorded as a deduction but for reporting we want it to be a positive value
+            .pipe(amount=lambda df_: df_['amount'] * -1) 
+            .to_sql(
+                'marts_spending',
+                db.connection(),
+                if_exists='replace',
+                index=False
+            )
+        )
+        db.commit()
+        print(f"✅ Created marts_spending table")
+    finally:
+        db.close()
+
+
+def create_income_tbl() -> None:
+    """
+    Extract all earnings (Salary, Venmo cash outs, tax refunds, cash deposits, etc.) from transactions table into
+    separate income table
+    """
+    db = get_db()
+    try:
+        (
+            create_unified_transactions()
+            .pipe(drop_savings_from_tx_tbl)
+            .loc[lambda df_: df_['category'].isin([INCOME_CATEGORIES])]
+            .to_sql(
+                'marts_income',
+                db.connection(),
+                if_exists='replace',
+                index=False
+            )
+        )
+        db.commit()
+        print(f"✅ Created marts_income table")
+    finally:
+        db.close()
+    
+
+
+def create_savings_tbl() -> None:
+    """Savings (transfers to/from brokerage)"""
     db = get_db()
     try:
         (
             create_unified_transactions()
             .pipe(subset_transactions_on_savings)
-            .groupby(['year', 'month'], as_index=False)
-            .agg(savings=('amount', 'sum'))
-            .sort_values(['year', 'month'], ascending=[True, True])
-            .assign(cumulative_savings=lambda df_: df_['savings'].cumsum())
             .to_sql(
-                'marts_monthly_savings', 
+                'marts_savings', 
                 db.connection(), 
                 if_exists='replace', 
                 index=False
             )
         )
         db.commit()
-        print(f"✅ Created marts_monthly_savings")
+        print(f"✅ Created marts_savings table")
     finally:
         db.close()
 
