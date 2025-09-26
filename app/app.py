@@ -19,12 +19,10 @@ app.add_middleware(
 )
 
 marts_tables = [
-    "marts_monthly_salary",
-    "marts_monthly_cash_flow",
-    "marts_monthly_spending_by_category",
-    "marts_monthly_spending_by_meta_category",
-    "marts_unified_transactions",
-    "marts_monthly_savings"
+    "marts_transactions",
+    "marts_income",
+    "marts_savings",
+    "marts_spending",
 ]
 
 # Database connection
@@ -45,44 +43,7 @@ def execute_query(query: str) -> List[Dict[str, Any]]:
 def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
-@app.get("/api/transactions/monthly_cash_flow")
-def get_monthly_cash_flow(
-    start_year: Optional[int] = Query(None, description="Start year (2023 first year in database)"),
-    end_year: Optional[int] = Query(None, description="End year"),
-    months: Optional[int] = Query(12, description="Number of recent months if no year range specified")
-) -> dict:
-    """
-    Return monthly cash flow data from marts table
-    """
-    if start_year and end_year:
-        query = """
-        SELECT 
-            year, month, year || '-' || PRINTF('%02d', month) as date_key, cash_flow, cumulative_cash_flow
-        FROM marts_monthly_cash_flow
-        WHERE year BETWEEN :start_year AND :end_year
-        ORDER BY year, month
-        """
-        result = execute_query(query.replace(':start_year', str(start_year)).replace(':end_year', str(end_year)))
-    else:
-        query = f"""
-        SELECT year, month, year || '-' || PRINTF('%02d', month) as date_key, cash_flow, cumulative_cash_flow
-        FROM marts_monthly_cash_flow
-        ORDER BY year DESC, month DESC
-        LIMIT {months}
-        """
-        result = execute_query(query)
-        result.reverse()
-    
-    return {
-        "data": result,
-        "metadata": {
-            "count": len(result),
-            "type": "cash_flow",
-            "currency": "USD"
-        }
-    }
-
-@app.get("/api/transactions/by-category")  
+@app.get("/api/spending/by-category")  
 def get_spending_by_category(
     period: str = Query("last_12_months", description="Time period: last_12_months, ytd, or specific year"),
     level: str = Query("category", description="Aggregation level: category or meta_category"),
@@ -98,14 +59,13 @@ def get_spending_by_category(
     
     if period == "ytd":
         current_year = datetime.now().year
-        where_clause = f"WHERE year = {current_year} AND meta_category != 'INCOME'"
+        where_clause = f"WHERE year = {current_year}"
     elif period == "year" and year:
-        where_clause = f"WHERE year = {year} AND meta_category != 'INCOME'"
+        where_clause = f"WHERE year = {year} AND'"
     else:  # last_12_months (default)
         where_clause = """
         WHERE (year * 12 + month) >= 
-              ((SELECT MAX(year * 12 + month) FROM marts_unified_transactions) - 11)
-              AND meta_category != 'INCOME'
+              ((SELECT MAX(year * 12 + month) FROM marts_spending) - 11)
         """
     
     query = f"""
@@ -113,8 +73,8 @@ def get_spending_by_category(
         year,
         month,
         {grouping_col} as category,
-        SUM(amount) * -1 as total_spending
-    FROM marts_unified_transactions
+        SUM(amount) as total_spending
+    FROM marts_spending
     {where_clause}
     GROUP BY year, month, {grouping_col}
     ORDER BY year, month
