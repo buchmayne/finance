@@ -6,12 +6,10 @@ class ETLPipeline:
             'raw': [raw.import_bank_accounts, raw.import_credit_cards],
             'staging': [staging.create_staging_bank_account_transactions, staging.create_staging_credit_card_transactions], 
             'marts': [
-                marts.create_monthly_salary_tbl,
-                marts.create_monthly_cash_flow_tbl,
-                marts.create_monthly_spending_by_category_tbl,
-                marts.create_monthly_spending_by_meta_category_tbl,
-                marts.create_unified_transactions_tbl,
-                marts.create_monthly_savings_tbl,
+                marts.create_transactions_tbl,
+                marts.create_income_tbl,
+                marts.create_savings_tbl,
+                marts.create_spending_tbl
             ],
         }
     
