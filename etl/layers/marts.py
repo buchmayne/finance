@@ -4,7 +4,7 @@ from etl.database import get_db
 
 
 # Parameters
-INCOME_CATEGORIES = ['SALARY', 'CASH_DEPOSIT', 'TAX_REFUND', 'ACCOUNT_INTEREST', 'PORTLAND_ARTS_TAX', 'FILING_TAXES']
+INCOME_CATEGORIES = ['SALARY', 'CASH_DEPOSIT', 'TAX_REFUND', 'ACCOUNT_INTEREST', 'PORTLAND_ARTS_TAX', 'FILING_TAXES', 'VENMO_CASHOUT']
 SAVINGS_CATEGORIES = ['TRANSFER_TO_BROKERAGE', 'TRANSFER_FROM_BROKERAGE']
 
 
@@ -58,7 +58,7 @@ def drop_savings_from_tx_tbl(df: pd.DataFrame) -> pd.DataFrame:
 
 def drop_income_from_tx_tbl(df: pd.DataFrame) -> pd.DataFrame:
     """Remove income from transaction table to better identify patterns in spending"""
-    return df.loc[~df['category'].isin([INCOME_CATEGORIES])]
+    return df.loc[~df['category'].isin(INCOME_CATEGORIES)]
 
 def assign_categories_to_meta_categories(df: pd.DataFrame) -> pd.DataFrame:
     """Group categories together into concepts for easier analysis"""
@@ -97,7 +97,7 @@ def assign_categories_to_meta_categories(df: pd.DataFrame) -> pd.DataFrame:
                 df['category'].isin(['GYM_MEMBERSHIP', 'INDOOR_SOCCER', 'SURFING']),
                 df['category'].isin(['CLOTHES', 'ARSENAL', 'DRY_CLEANING']),
                 df['category'].isin(['GAS', 'CAR_MAINTENANCE']),
-                df['category'].isin(['VENMO_PAYMENT', 'VENMO_CASHOUT']),
+                df['category'].isin(['VENMO_PAYMENT']),
                 df['category'].isin(['HOSTING_SOFTWARE_PROJECTS', 'COMPUTERS_TECHNOLOGY_HARDWARE']),
                 df['category'] == 'AMAZON_PURCHASE'
             ],
@@ -185,7 +185,7 @@ def create_income_tbl() -> None:
         (
             create_unified_transactions()
             .pipe(drop_savings_from_tx_tbl)
-            .loc[lambda df_: df_['category'].isin([INCOME_CATEGORIES])]
+            .loc[lambda df_: df_['category'].isin(INCOME_CATEGORIES)]
             .to_sql(
                 'marts_income',
                 db.connection(),
