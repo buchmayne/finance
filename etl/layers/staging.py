@@ -29,6 +29,9 @@ def _normalize_date(df: pd.DataFrame) -> pd.DataFrame:
             month=pd.to_datetime(df['date']).dt.month,
             day_of_week=pd.to_datetime(df['date']).dt.weekday + 1, # Monday = 1 & Sunday = 7 more intuitive
         )
+        .assign(
+            year_month=lambda df_: df_['year'].astype(str) + '-' + df_['month'].astype(str).map({str(x): f"0{x}" if len(str(x)) == 1 else str(x) for x in list(range(1, 13))})
+        )
     )
 
 
