@@ -1,28 +1,32 @@
 from etl.layers import raw, staging, marts
 
+
 class ETLPipeline:
     def __init__(self):
         self.layers = {
-            'raw': [raw.import_bank_accounts, raw.import_credit_cards],
-            'staging': [staging.create_staging_bank_account_transactions, staging.create_staging_credit_card_transactions], 
-            'marts': [
+            "raw": [raw.import_bank_accounts, raw.import_credit_cards],
+            "staging": [
+                staging.create_staging_bank_account_transactions,
+                staging.create_staging_credit_card_transactions,
+            ],
+            "marts": [
                 marts.create_transactions_tbl,
                 marts.create_income_tbl,
                 marts.create_savings_tbl,
-                marts.create_spending_tbl
+                marts.create_spending_tbl,
             ],
         }
-    
+
     def run_layer(self, layer_name: str):
         """Run all transformations in a specific layer"""
         if layer_name not in self.layers:
             raise ValueError(f"Unknown layer: {layer_name}")
-            
+
         for transform_func in self.layers[layer_name]:
             print(f"Running {transform_func.__name__}...")
             transform_func()
-    
+
     def run_full_pipeline(self):
         """Run entire pipeline in dependency order"""
-        for layer_name in ['raw', 'staging', 'marts']:
+        for layer_name in ["raw", "staging", "marts"]:
             self.run_layer(layer_name)

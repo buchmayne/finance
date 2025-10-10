@@ -4,6 +4,7 @@ from datetime import datetime
 
 Base = declarative_base()
 
+
 class BankAccountTransaction(Base):
     __tablename__ = "raw_bank_account_transactions"
 

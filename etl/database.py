@@ -6,6 +6,7 @@ from etl.config import Settings
 engine = create_engine(Settings.database_url)
 SessionLocal = sessionmaker(bind=engine)
 
+
 def get_db():
     """Get database session"""
     return SessionLocal()

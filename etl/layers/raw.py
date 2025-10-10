@@ -6,18 +6,12 @@ import pandas as pd
 from etl.database import get_db
 from etl.types import AccountType, PathCSVDirectories
 from etl.schema import create_raw_schema
-from app.models import (
-    BankAccountTransaction,
-    CreditCardTransaction,
-    Base
-)
-from etl.mappings import (
-    get_chase_bank_account_mapping,
-    get_chase_credit_card_mapping
-)
+from app.models import BankAccountTransaction, CreditCardTransaction, Base
+from etl.mappings import get_chase_bank_account_mapping, get_chase_credit_card_mapping
 
 # Create raw tables
 create_raw_schema()
+
 
 class CSVImporter(ABC):
     def __init__(self):
@@ -32,13 +26,13 @@ class CSVImporter(ABC):
         print("\n🔍 Sample data:")
         print(df.to_string())
         return df
-    
+
     def _generate_id(self, row) -> str:
         """Generate unique ID for transaction"""
         # Create hash from date + amount + description
         content = f"{row['date']}{row['amount']}{str(row['description'])[:50]}"
         return hashlib.md5(content.encode()).hexdigest()[:12]
-    
+
     def _extract_chase_account(self, file_path: str) -> str | None:
         patterns = [
             r"Chase\s*\d{4}",
@@ -57,7 +51,7 @@ class CSVImporter(ABC):
         """Close database connection"""
         if self.db:
             self.db.close()
-    
+
     @abstractmethod
     def import_csv(self):
         pass
@@ -66,7 +60,7 @@ class CSVImporter(ABC):
     def _clean_data(self):
         pass
 
-    
+
 class BankAccountCSVImporter(CSVImporter):
 
     def import_csv(
@@ -142,7 +136,7 @@ class BankAccountCSVImporter(CSVImporter):
 
 
 class CreditCardCSVImporter(CSVImporter):
-    
+
     def import_csv(
         self, file_path: str, column_mapping: dict, dry_run: bool = True
     ) -> pd.DataFrame:
@@ -220,11 +214,8 @@ class CreditCardCSVImporter(CSVImporter):
 
 
 def process_csv_file(
-        importer : CSVImporter,
-        file_path : str,
-        account_type: AccountType,
-        dry_run : bool
-    ) -> dict:
+    importer: CSVImporter, file_path: str, account_type: AccountType, dry_run: bool
+) -> dict:
     """Process a single CSV file"""
     print(f"\n{'='*60}")
     print(f"📄 Processing: {file_path}")
@@ -258,11 +249,11 @@ def process_csv_file(
 
 
 def process_all_csv_files(
-        folder_path: Path,
-        account_type: AccountType,
-        dry_run: bool, 
-        file_pattern: str = "*.csv"
-    ) -> None:
+    folder_path: Path,
+    account_type: AccountType,
+    dry_run: bool,
+    file_pattern: str = "*.csv",
+) -> None:
     """Process all CSV files in a folder"""
     folder = Path(folder_path)
 
@@ -337,7 +328,7 @@ def import_bank_accounts(dry_run: bool = False):
     process_all_csv_files(
         folder_path=str(PathCSVDirectories.bank_accounts_dir),
         account_type=AccountType.BANK_ACCOUNT,
-        dry_run=dry_run
+        dry_run=dry_run,
     )
 
 
@@ -346,6 +337,5 @@ def import_credit_cards(dry_run: bool = False):
     process_all_csv_files(
         folder_path=str(PathCSVDirectories.credit_cards_dir),
         account_type=AccountType.CREDIT_CARD,
-        dry_run=dry_run
+        dry_run=dry_run,
     )
-

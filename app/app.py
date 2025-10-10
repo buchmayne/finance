@@ -15,7 +15,7 @@ app.add_middleware(
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
 marts_tables = [
@@ -27,6 +27,7 @@ marts_tables = [
 
 # Database connection
 engine = create_engine(Settings.database_url)
+
 
 def execute_query(query: str) -> List[Dict[str, Any]]:
     """Execute SQL query and return results as list of dictionaries"""
@@ -43,20 +44,25 @@ def execute_query(query: str) -> List[Dict[str, Any]]:
 def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
-@app.get("/api/spending/by-category")  
+
+@app.get("/api/spending/by-category")
 def get_spending_by_category(
-    period: str = Query("last_12_months", description="Time period: last_12_months, ytd, or all"),
-    level: str = Query("category", description="Aggregation level: category or meta_category"),
-    year: Optional[int] = Query(None, description="Specific year if period='year'")
+    period: str = Query(
+        "last_12_months", description="Time period: last_12_months, ytd, or all"
+    ),
+    level: str = Query(
+        "category", description="Aggregation level: category or meta_category"
+    ),
+    year: Optional[int] = Query(None, description="Specific year if period='year'"),
 ):
     """
     Get spending breakdown by category.
     Returns data suitable for bar charts showing category spending.
     """
-    
+
     # Choose table based on aggregation level
-    grouping_col = "meta_category" if level == "meta_category" else "category" 
-    
+    grouping_col = "meta_category" if level == "meta_category" else "category"
+
     if period == "ytd":
         current_year = datetime.now().year
         where_clause = f"WHERE year = {current_year}"
@@ -67,7 +73,7 @@ def get_spending_by_category(
         WHERE (year * 12 + month) >= 
               ((SELECT MAX(year * 12 + month) FROM marts_spending) - 11)
         """
-    
+
     query = f"""
     SELECT 
         year,
@@ -79,18 +85,19 @@ def get_spending_by_category(
     GROUP BY year, month, {grouping_col}
     ORDER BY year, month
     """
-    
+
     result = execute_query(query)
-    
+
     return {
         "data": result,
         "metadata": {
             "count": len(result),
             "period": period,
             "level": level,
-            "total": sum(item["total_spending"] for item in result)
-        }
+            "total": sum(item["total_spending"] for item in result),
+        },
     }
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
