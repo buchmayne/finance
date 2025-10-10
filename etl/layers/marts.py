@@ -81,7 +81,7 @@ def assign_categories_to_meta_categories(df: pd.DataFrame) -> pd.DataFrame:
         .assign(meta_category=np.select(
             [
                 df['category'].isin(['MORTGAGE_PAYMENT', 'HOA_PAYMENT']),
-                df['category'].isin(['JENNA_WEDDING_ACCT_TRANSFERS', 'WEDDING_PHOTOGRAPHER', 'WEDDING']),
+                df['category'].isin(['JENNA_WEDDING_ACCT_TRANSFERS', 'WEDDING_PHOTOGRAPHER', 'WEDDING', 'CASH_WITHDRAWL_FOR_WEDDING']),
                 df['category'].isin(subscriptions),
                 df['category'].isin(['SALARY', 'CASH_DEPOSIT', 'TAX_REFUND', 'ACCOUNT_INTEREST', 'PORTLAND_ARTS_TAX', 'FILING_TAXES']),
                 df['category'].isin(['CASH_WITHDRAWL']),

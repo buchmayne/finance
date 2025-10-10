@@ -45,7 +45,7 @@ def health_check():
 
 @app.get("/api/spending/by-category")  
 def get_spending_by_category(
-    period: str = Query("last_12_months", description="Time period: last_12_months, ytd, or specific year"),
+    period: str = Query("last_12_months", description="Time period: last_12_months, ytd, or all"),
     level: str = Query("category", description="Aggregation level: category or meta_category"),
     year: Optional[int] = Query(None, description="Specific year if period='year'")
 ):
@@ -60,8 +60,8 @@ def get_spending_by_category(
     if period == "ytd":
         current_year = datetime.now().year
         where_clause = f"WHERE year = {current_year}"
-    elif period == "year" and year:
-        where_clause = f"WHERE year = {year} AND'"
+    elif period == "all":
+        where_clause = f"WHERE 1 = 1'"
     else:  # last_12_months (default)
         where_clause = """
         WHERE (year * 12 + month) >= 

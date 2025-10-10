@@ -81,6 +81,8 @@ def _categorize_individual_bank_transaction(description: str) -> str:
         return 'TRANSFER_BETWEEN_CHASE_ACCOUNTS'
     elif any(pattern in description for pattern in ['DEPOSIT ID NUMBER', 'REMOTE ONLINE DEPOSIT']):
         return 'CASH_DEPOSIT'
+    elif description == 'WITHDRAWAL 07/14':
+        return 'CASH_WITHDRAWL_FOR_WEDDING'
     elif 'WITHDRAWAL' in description:
         return 'CASH_WITHDRAWL'
     elif 'ALEX ELISE' in description:
@@ -194,7 +196,10 @@ def _categorize_individual_credit_card_transaction(description: str) -> str:
         'BLACK BUTTE RANCH FOOD',
         'IN *THE BOB LLC',
         'FORYOURPARTY',
-        'SISTERS SALOON &AMP; RANCH'
+        'SISTERS SALOON &AMP; RANCH',
+        'PROPER CLOTH',
+        'MORJAS',
+        'EUROPEAN MASTER TAILOR',
     ]
 
     fast_food_desc = [
@@ -256,10 +261,7 @@ def _categorize_individual_credit_card_transaction(description: str) -> str:
 
     clothing_desc = [
         'NORDSTROM',
-        'PROPER CLOTH',
-        'MORJAS',
         'FJAELLRAEVEN',
-        'EUROPEAN MASTER TAILOR',
         'ON INC',
         'TOMMY BAHAMA 613',
         'WARBY PARKER',
