@@ -7,7 +7,7 @@ MORTGAGE_CONTRIBUTION = 850
 
 def determine_last_X_months_from_dataset(
     df: pd.DataFrame, number_of_months: int
-) -> np.array:
+) -> np.ndarray:
     """
     Given transaction data determine the most recent X year-months from the dataset
     """
