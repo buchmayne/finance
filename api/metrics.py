@@ -4,6 +4,7 @@ from sqlalchemy.orm.session import Session
 
 MORTGAGE_CONTRIBUTION = 850
 
+
 def determine_last_X_months_from_dataset(
     df: pd.DataFrame, number_of_months: int
 ) -> np.array:
