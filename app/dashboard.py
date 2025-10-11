@@ -84,7 +84,7 @@ def fetch_api_data(
 # plot_monthly_spending_by_category
 def create_spending_by_category_visualization(data: list) -> plt.Figure:
     """
-    TBD
+    Generate matplotlib figure object showing spending by meta category.s
     """
     if not data:
         fig, ax = plt.subplots(figsize=(10, 6))
