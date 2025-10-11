@@ -1,8 +1,11 @@
-from sqlalchemy import Column, String, Numeric, DateTime, Text
-from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
+from typing import Type
+from sqlalchemy import Column, String, Numeric, DateTime, Text
+from sqlalchemy.orm import DeclarativeBase
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
 
 
 class BankAccountTransaction(Base):
