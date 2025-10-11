@@ -1,10 +1,8 @@
 import pandas as pd
 import numpy as np
 from sqlalchemy.orm.session import Session
-from etl.database import get_db
 
-JENNA_MORTGAGE_CONTRIBUTION = 850
-
+MORTGAGE_CONTRIBUTION = 850
 
 def determine_last_X_months_from_dataset(
     df: pd.DataFrame, number_of_months: int
@@ -220,7 +218,7 @@ def calculate_average_monthly_budget(
             "description": ["SALARY", "MORTGAGE_CONTRIBUTION"],
             "amount": [
                 calculate_average_monthly_salary(db, period),
-                JENNA_MORTGAGE_CONTRIBUTION,
+                MORTGAGE_CONTRIBUTION,
             ],
             "category": ["INCOME", "INCOME"],
         },

@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine
-from app.models import Base
+from etl.models import Base
 from etl.config import Settings
 
 

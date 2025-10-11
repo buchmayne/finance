@@ -1,15 +1,10 @@
-from fastapi import FastAPI, HTTPException, Query, Depends
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Optional, List, Dict, Any
-from datetime import datetime, date
-from sqlalchemy import create_engine, text
+from datetime import datetime
 from sqlalchemy.orm.session import Session
-from etl.config import Settings
 from etl.database import get_db
 import uvicorn
-import json
-import pandas as pd
-from metrics import (
+from .metrics import (
     calculate_average_monthly_spending_by_meta_category,
     calculate_monthly_budget_history,
     calculate_average_monthly_budget,

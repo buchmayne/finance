@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import requests
 import pandas as pd
@@ -13,7 +14,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Configuration
-API_BASE = "http://localhost:8000/api"
+API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 # Set matplotlib and seaborn styling
 plt.style.use("default")
@@ -67,7 +68,7 @@ def fetch_api_data(
         JSON response as dictionary, or None if request failed
     """
     try:
-        url = f"{API_BASE}{endpoint}"
+        url = f"{API_URL}{endpoint}"
         response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
         return response.json()
@@ -148,7 +149,7 @@ def main():
     st.sidebar.markdown("---")
     st.sidebar.markdown("**API Status**")
     try:
-        health_check = requests.get(f"{API_BASE}/health", timeout=5)
+        health_check = requests.get(f"{API_URL}/health", timeout=5)
         if health_check.status_code == 200:
             st.sidebar.success("✅ Connected to API")
         else:

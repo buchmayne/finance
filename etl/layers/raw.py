@@ -6,7 +6,7 @@ import pandas as pd
 from etl.database import get_db
 from etl.types import AccountType, PathCSVDirectories
 from etl.schema import create_raw_schema
-from app.models import BankAccountTransaction, CreditCardTransaction, Base
+from etl.models import BankAccountTransaction, CreditCardTransaction, Base
 from etl.mappings import get_chase_bank_account_mapping, get_chase_credit_card_mapping
 
 # Create raw tables

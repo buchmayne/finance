@@ -1,0 +1,22 @@
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+
+WORKDIR /app
+
+COPY pyproject.toml uv.lock ./
+
+ENV UV_SYSTEM_PYTHON=1
+
+# Install dependencies
+RUN uv sync --frozen --no-dev
+
+COPY api/ ./api/
+COPY etl/ ./etl/
+# This is a hack for now. Replace sqlite with postgres for scalability
+COPY finance.db ./
+
+# Make port configurable via ENV
+ENV PORT=8000
+EXPOSE ${PORT}
+
+# Use exec form for proper signal handling
+CMD ["uv", "run",  "uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
