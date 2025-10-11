@@ -4,8 +4,8 @@ from pathlib import Path
 
 
 class AccountType(Enum):
-    BANK_ACCOUNT: str = "bank_account"
-    CREDIT_CARD: str = "credit_card"
+    BANK_ACCOUNT = "bank_account"
+    CREDIT_CARD = "credit_card"
 
 
 @dataclass
