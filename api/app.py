@@ -1,5 +1,7 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from datetime import datetime
 from sqlalchemy.orm.session import Session
 from etl.database import get_db
@@ -66,6 +68,15 @@ def get_average_monthly_budget(
     """
     df = calculate_average_monthly_budget(db, period, include_wedding)
     return df.to_dict(orient="records")
+
+
+# serve front end
+app.mount("/static", StaticFiles(directory="frontend"), name="static")
+
+
+@app.get("/control")
+async def serve_frontend() -> FileResponse:
+    return FileResponse("frontend/index.html")
 
 
 if __name__ == "__main__":
