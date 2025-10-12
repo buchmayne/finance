@@ -286,7 +286,7 @@ def process_all_csv_files(
     results = []
 
     importer: CSVImporter
-    
+
     if account_type == AccountType.BANK_ACCOUNT:
         importer = BankAccountCSVImporter()
     elif account_type == AccountType.CREDIT_CARD:
