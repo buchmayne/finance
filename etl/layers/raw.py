@@ -53,11 +53,11 @@ class CSVImporter(ABC):
             self.db.close()
 
     @abstractmethod
-    def import_csv(self):
+    def import_csv(self, *args, **kwargs) -> pd.DataFrame:
         pass
 
     @abstractmethod
-    def _clean_data(self):
+    def _clean_data(self, *args, **kwargs) -> pd.DataFrame:
         pass
 
 
@@ -249,7 +249,7 @@ def process_csv_file(
 
 
 def process_all_csv_files(
-    folder_path: Path,
+    folder_path: str,
     account_type: AccountType,
     dry_run: bool,
     file_pattern: str = "*.csv",
@@ -262,7 +262,7 @@ def process_all_csv_files(
         return
 
     # Find all CSV files (case-insensitive)
-    csv_files = []
+    csv_files: list = []
 
     # Handle case-insensitive matching
     if file_pattern.lower() == "*.csv":
@@ -271,7 +271,7 @@ def process_all_csv_files(
         csv_files.extend(folder.glob("*.CSV"))
 
     # Remove duplicates (in case a file matches multiple patterns)
-    csv_files = list(set(csv_files))
+    csv_files: list = list(set(csv_files))
 
     if not csv_files:
         print(f"❌ No CSV files found in {folder} matching pattern '{file_pattern}'")
@@ -285,12 +285,14 @@ def process_all_csv_files(
     # Process each file
     results = []
 
+    importer: CSVImporter
+    
     if account_type == AccountType.BANK_ACCOUNT:
         importer = BankAccountCSVImporter()
     elif account_type == AccountType.CREDIT_CARD:
         importer = CreditCardCSVImporter()
     else:
-        ValueError, "Account Type Not Supported"
+        raise ValueError(f"Account Type Not Supported: {account_type}")
 
     try:
         for csv_file in csv_files:
