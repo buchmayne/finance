@@ -44,7 +44,7 @@ def plot_monthly_spending_by_category(df: pd.DataFrame) -> plt.figure:
     return fig
 
 
-def plot_monthly_budget_history(df: pd.DataFrame) -> None:
+def plot_monthly_budget_history(df: pd.DataFrame) -> plt.Figure:
     """
     df = calculate_monthly_budget_history(db, period, include_wedding)
     """
@@ -142,10 +142,11 @@ def plot_monthly_budget_history(df: pd.DataFrame) -> None:
 
     plt.tight_layout()
     plt.grid(alpha=0.25)
-    plt.show()
+    
+    return fig
 
 
-def plot_average_monthly_budget(df: pd.DataFrame) -> None:
+def plot_average_monthly_budget(df: pd.DataFrame) -> plt.Figure:
     """
     df = calculate_average_monthly_budget(db, period, include_wedding)
     """
@@ -233,4 +234,62 @@ def plot_average_monthly_budget(df: pd.DataFrame) -> None:
     ax.legend(handles=legend_elements, loc="upper right")
 
     plt.tight_layout()
-    plt.show()
+    
+    return fig
+
+
+def plot_average_monthly_eating_out_spend_by_category(df: pd.DataFrame) -> plt.Figure:
+    """
+    df = calculate_average_monthly_spend_eating_out_by_category(db, period)
+    """
+    cat_mapping= {
+        'OTHER_COFFEE_SHOPS': 'Other Coffee Shops',
+        'DOMINOS': 'Dominos Pizza',
+        'FAST_FOOD': 'Fast Food',
+        'OVATION_WEEKEND': 'Ovation (Weekend)',
+        'OVATION_WEEKDAY': 'Ovation (Weekday)',
+        'NBHD_BARS': 'Neighborhood Bars and Restaurants',
+        'EATING_OUT_NBHD_LUNCH': 'Workday Lunch in Pearl',
+        'EATING_OUT': 'Other'
+
+    }
+    
+    to_plot = (
+        df
+        .assign(
+            category=lambda df_: df_['category'].map(cat_mapping)
+        )
+    )
+    fig, ax = plt.subplots(figsize=(10, 8))
+
+    bars = ax.barh(
+        to_plot['category'],
+        to_plot["amount"],
+        color=[
+        '#88C0D0',
+        '#81A1C1',
+        '#5E81AC',
+        '#BF616A',
+        '#D08770',
+        '#EBCB8B',
+        '#A3BE8C',
+        '#B48EAD',
+        ]
+    )
+
+    # Annotate with dollar signs
+    for i, spend in enumerate(
+        df["amount"]
+    ):
+        ax.text(spend + 10, i, f"${spend:.1f}", va="center", fontsize=9)
+
+    ax.set_xlabel("Avg Monthly Spend ($)")
+    ax.set_title("Eating Out by Category")
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+
+    plt.tight_layout()
+    plt.grid(alpha=0.25)
+
+    return fig
