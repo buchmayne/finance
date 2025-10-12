@@ -258,11 +258,11 @@ def calculate_monthly_budget_history(
     )
 
 
-def calculate_monthly_eating_out_spend_by_subcategory(
+def calculate_average_monthly_spend_eating_out_by_category(
     db: Session, period: str = "full_history"
 ) -> pd.DataFrame:
     """
-    For each month calculate the total spending by subcategory in the EATING_OUT meta category.
+    For each month calculate the average spending by subcategory in the EATING_OUT meta category.
     """
     return (
         pd.read_sql("""SELECT * FROM marts_spending""", db.connection())
@@ -272,4 +272,11 @@ def calculate_monthly_eating_out_spend_by_subcategory(
         .agg(amount=("amount", "sum"))
         .pivot_table(index="year_month", columns="category", values="amount")
         .fillna(0)
+        .mean()
+        .to_frame(name='amount')
+        .sort_values('amount', ascending=True)
+        .reset_index(drop=False)
+        .assign(
+            WORKDAY=lambda df_: df_['category'].isin(['OVATION_WEEKDAY', 'EATING_OUT_NBHD_LUNCH'])
+        )
     )
