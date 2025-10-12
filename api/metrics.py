@@ -273,10 +273,12 @@ def calculate_average_monthly_spend_eating_out_by_category(
         .pivot_table(index="year_month", columns="category", values="amount")
         .fillna(0)
         .mean()
-        .to_frame(name='amount')
-        .sort_values('amount', ascending=True)
+        .to_frame(name="amount")
+        .sort_values("amount", ascending=True)
         .reset_index(drop=False)
         .assign(
-            WORKDAY=lambda df_: df_['category'].isin(['OVATION_WEEKDAY', 'EATING_OUT_NBHD_LUNCH'])
+            WORKDAY=lambda df_: df_["category"].isin(
+                ["OVATION_WEEKDAY", "EATING_OUT_NBHD_LUNCH"]
+            )
         )
     )
