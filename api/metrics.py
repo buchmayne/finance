@@ -256,3 +256,20 @@ def calculate_monthly_budget_history(
         .merge(calculate_monthly_saving(db, period), how="left")
         .assign(cumulative_savings=lambda df_: df_["monthly_savings"].cumsum())
     )
+
+
+def calculate_monthly_eating_out_spend_by_subcategory(
+    db: Session, period: str = "full_history"
+) -> pd.DataFrame:
+    """
+    For each month calculate the total spending by subcategory in the EATING_OUT meta category.
+    """
+    return (
+        pd.read_sql("""SELECT * FROM marts_spending""", db.connection())
+        .pipe(subset_data_by_period, period)
+        .loc[lambda df_: df_["meta_category"] == "EATING_OUT"]
+        .groupby(["year_month", "category"], as_index=False)
+        .agg(amount=("amount", "sum"))
+        .pivot_table(index="year_month", columns="category", values="amount")
+        .fillna(0)
+    )
