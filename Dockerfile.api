@@ -11,6 +11,7 @@ RUN uv sync --frozen --no-dev
 
 COPY api/ ./api/
 COPY etl/ ./etl/
+COPY frontend/ ./frontend/
 # This is a hack for now. Replace sqlite with postgres for scalability
 COPY finance.db ./
 
