@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FINANCIAL CONTROL INTERFACE</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="frontend/style.css">
+</head>
+<body>
+  <div class="controls">
+    <button id="refreshBtn">REFRESH [R]</button>
+    <button id="toggleAutoRefresh">AUTO: OFF</button>
+  </div>
+
+  <div class="header">
+    <h1>FINANCIAL CONTROL INTERFACE</h1>
+    <div class="timestamp" id="timestamp">LOADING...</div>
+  </div>
+
+  <div class="dashboard">
+    <!-- Account Balance Panel -->
+    <div class="panel">
+      <div class="panel-header">ACCOUNT BALANCE</div>
+      <div class="metric-large" id="totalBalance">$0.00</div>
+      <div class="metric-grid">
+        <div class="metric-item">
+          <div class="metric-label">CHECKING</div>
+          <div class="metric-value" id="checking">$0.00</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-label">SAVINGS</div>
+          <div class="metric-value" id="savings">$0.00</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monthly Summary Panel -->
+    <div class="panel">
+      <div class="panel-header">MONTHLY SUMMARY</div>
+      <div class="metric-grid">
+        <div class="metric-item">
+          <div class="metric-label">INCOME</div>
+          <div class="metric-value" id="monthlyIncome">$0.00</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-label">EXPENSES</div>
+          <div class="metric-value alert" id="monthlyExpenses">$0.00</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-label">NET</div>
+          <div class="metric-value" id="monthlyNet">$0.00</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-label">BUDGET REMAIN</div>
+          <div class="metric-value" id="budgetRemain">$0.00</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Indicators Panel -->
+    <div class="panel">
+      <div class="panel-header">SYSTEM STATUS</div>
+      <div style="padding: 10px 0;">
+        <div style="margin: 10px 0;">
+          <span class="status-indicator status-active"></span>
+          <span>API CONNECTION</span>
+        </div>
+        <div style="margin: 10px 0;">
+          <span class="status-indicator status-active"></span>
+          <span>DATA PIPELINE</span>
+        </div>
+        <div style="margin: 10px 0;">
+          <span class="status-indicator status-warning"></span>
+          <span>BUDGET ALERTS: 2</span>
+        </div>
+        <div style="margin: 10px 0;">
+          <span class="status-indicator status-active"></span>
+          <span>LAST SYNC: <span id="lastSync">--:--</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spending by Category Chart -->
+    <div class="panel wide">
+      <div class="panel-header">SPENDING BY CATEGORY - CURRENT MONTH</div>
+      <canvas id="categoryChart"></canvas>
+    </div>
+
+    <!-- Recent Transactions Table -->
+    <div class="panel wide tall">
+      <div class="panel-header">RECENT TRANSACTIONS</div>
+      <div id="transactionsTable">
+        <div class="loading">LOADING DATA</div>
+      </div>
+    </div>
+
+    <!-- Balance Trend Chart -->
+    <div class="panel">
+      <div class="panel-header">BALANCE TREND - 30 DAYS</div>
+      <canvas id="balanceTrendChart"></canvas>
+    </div>
+  </div>
+  <script type="module" src="frontend/script.js"></script>
+</body>
+</html>

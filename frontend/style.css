@@ -1,0 +1,249 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary: #00ff00;
+    --secondary: #ffaa00;
+    --alert: #ff0000;
+    --bg: #000000;
+    --panel-bg: rgba(0, 20, 0, 0.6);
+    --border: #00ff00;
+}
+
+body {
+    font-family: 'Courier New', monospace;
+    background: var(--bg);
+    color: var(--primary);
+    overflow-x: hidden;
+    padding: 20px;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 255, 0, 0.03) 2px,
+    rgba(0, 255, 0, 0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+    border: 2px solid var(--border);
+    padding: 15px;
+    background: var(--panel-bg);
+    text-shadow: 0 0 10px var(--primary);
+}
+
+.header h1 {
+    font-size: 1.8rem;
+    letter-spacing: 0.2em;
+    margin-bottom: 5px;
+}
+
+.header .timestamp {
+    font-size: 0.9rem;
+    color: var(--secondary);
+}
+
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    max-width: 1800px;
+    margin: 0 auto;
+}
+
+.panel {
+    border: 2px solid var(--border);
+    background: var(--panel-bg);
+    padding: 15px;
+    position: relative;
+}
+
+.panel.wide {
+    grid-column: span 2;
+}
+
+.panel.tall {
+    grid-row: span 2;
+}
+
+.panel-header {
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+    color: var(--secondary);
+    text-shadow: 0 0 5px var(--secondary);
+}
+
+.metric-large {
+    font-size: 3rem;
+    text-align: center;
+    margin: 30px 0;
+    text-shadow: 0 0 15px var(--primary);
+}
+
+.metric-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin: 10px 0;
+}
+
+.metric-item {
+    text-align: center;
+    padding: 15px;
+    border: 1px solid rgba(0, 255, 0, 0.3);
+}
+
+.metric-label {
+    font-size: 0.75rem;
+    color: var(--secondary);
+    margin-bottom: 8px;
+}
+
+.metric-value {
+    font-size: 1.5rem;
+    text-shadow: 0 0 8px var(--primary);
+}
+
+.metric-value.alert {
+    color: var(--alert);
+    text-shadow: 0 0 8px var(--alert);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+
+th {
+    background: rgba(0, 255, 0, 0.1);
+    padding: 8px;
+    text-align: left;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+}
+
+th:hover {
+    background: rgba(0, 255, 0, 0.2);
+}
+
+th::after {
+    content: ' ▸';
+    font-size: 0.7rem;
+    opacity: 0.5;
+}
+
+td {
+    padding: 6px 8px;
+    border: 1px solid rgba(0, 255, 0, 0.3);
+}
+
+tr:hover {
+    background: rgba(0, 255, 0, 0.05);
+}
+
+.status-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.status-active {
+    background: var(--primary);
+    box-shadow: 0 0 5px var(--primary);
+}
+
+.status-warning {
+    background: var(--secondary);
+    box-shadow: 0 0 5px var(--secondary);
+}
+
+.status-error {
+    background: var(--alert);
+    box-shadow: 0 0 5px var(--alert);
+}
+
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--secondary);
+    font-size: 1.2rem;
+    text-shadow: 0 0 8px var(--secondary);
+}
+
+.loading::after {
+    content: '...';
+    animation: dots 1.5s infinite;
+}
+
+@keyframes dots {
+    0%, 20% { content: '.'; }
+    40% { content: '..'; }
+    60%, 100% { content: '...'; }
+}
+
+canvas {
+    max-height: 250px;
+}
+
+.controls {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1001;
+    display: flex;
+    gap: 10px;
+}
+
+button {
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    color: var(--primary);
+    padding: 8px 15px;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    text-shadow: 0 0 5px var(--primary);
+    transition: all 0.2s;
+}
+
+button:hover {
+    background: rgba(0, 255, 0, 0.2);
+    box-shadow: 0 0 10px var(--primary);
+}
+
+@media (max-width: 1200px) {
+    .dashboard {
+    grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard {
+    grid-template-columns: 1fr;
+    }
+    .panel.wide {
+    grid-column: span 1;
+    }
+}
