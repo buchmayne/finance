@@ -262,16 +262,16 @@ def process_all_csv_files(
         return
 
     # Find all CSV files (case-insensitive)
-    csv_files: list = []
+    all_csv_files: list = []
 
     # Handle case-insensitive matching
     if file_pattern.lower() == "*.csv":
         # Default case: find both .csv and .CSV files
-        csv_files.extend(folder.glob("*.csv"))
-        csv_files.extend(folder.glob("*.CSV"))
+        all_csv_files.extend(folder.glob("*.csv"))
+        all_csv_files.extend(folder.glob("*.CSV"))
 
     # Remove duplicates (in case a file matches multiple patterns)
-    csv_files: list = list(set(csv_files))
+    csv_files: list = list(set(all_csv_files))
 
     if not csv_files:
         print(f"❌ No CSV files found in {folder} matching pattern '{file_pattern}'")
