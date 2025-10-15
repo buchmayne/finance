@@ -123,18 +123,115 @@ def _categorize_all_bank_transactions(df: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-# Categorize Credut Card Transactions
+# Categorize Credit Card Transactions
 def _categorize_individual_credit_card_transaction(description: str) -> str:
-    """Logic to categorize transactions based on description"""
+    """
+    Logic to categorize transactions based on description.
+
+    IMPORTANT: More specific patterns should be checked BEFORE more general ones
+    to avoid false matches. For example, "XBOX" should be checked before broad
+    eating_out patterns that might contain partial matches.
+    """
 
     def _match(desc: list, description: str = description) -> bool:
         return any(pattern in description for pattern in desc)
 
+    # PRIORITY 1: Exact matches and very specific patterns (check these first!)
+    if description == "PORTLAND GENERAL ELECTRIC":
+        return "PGE"
+    elif description == "POWELL'S BURNSIDE":
+        return "POWELLS"
+    elif description == "APPLE.COM/BILL":
+        return "APPLE_CLOUD_STORAGE"
+    elif description == "ROKU FOR WARNERMEDIA GLOB":
+        return "HBO_SUBSCRIPTION"
+    elif description == "HRB ONLINE TAX PRODUCT":
+        return "FILING_TAXES"
+    elif description == "JEWELERS-MUTUAL-PMNT":
+        return "DIAMOND_INSURANCE"
+    elif description == "BLAZERVISION":
+        return "BLAZER_VISION_SUBSCRIPTION"
+    elif description == "DUNCD ON PRIME":
+        return "PODCAST_SUBSCRIPTION"
+    elif description == "ROKU FOR PEACOCK TV LLC":
+        return "PEACOCK_SUBSCRIPTION"
+
+    # PRIORITY 2: Keywords that need to be checked early (before broader patterns)
+    # Check these before eating_out/general categories that might have partial matches
+    elif "SQ *OVATION COFFEE" in description:
+        return "OVATION"
+    elif "XBOX" in description or "PLAYSTATION" in description:
+        return "VIDEO_GAMES"
+    elif "WILLAMETTE DRY" in description:
+        return "DRY_CLEANING"
+    elif "USPS PO" in description or "FEDEX OFFIC" in description:
+        return "SHIPPING"
+    elif "RODEO" in description:
+        return "RODEO"
+    elif "OPAL CAMERA" in description:
+        return "COMPUTERS_TECHNOLOGY_HARDWARE"
+    elif "GORGE PERFORMANCE" in description or "SP TRAVELERSURFCLUB" in description:
+        return "SURFING"
+    elif "LYFT" in description or "UBER" in description:
+        return "RIDESHARE"
+    elif "LIQUOR STORE" in description or "ROLLING RIVER SPIRITS" in description:
+        return "LIQUOR_STORE"
+    elif "LA FIT" in description:
+        return "GYM_MEMBERSHIP"
+    elif "SPOTIFY" in description:
+        return "SPOTIFY_MEMBERSHIP"
+    elif "COMCAST" in description:
+        return "COMCAST"
+    elif "SQ *MICHELLE THRASHER" in description or "SQ *SLABTOWN BARBERSHOP" in description:
+        return "HAIRCUT"
+    elif "ARSENAL" in description:
+        return "ARSENAL"
+    elif "PARKING" in description:
+        return "PARKING"
+    elif "MODA CENTER" in description:
+        return "MODA_CENTER"
+    elif "PORTLAND INDOOR SOCCE" in description:
+        return "INDOOR_SOCCER"
+    elif "PRIME VIDEO" in description or "GOOGLE *TV" in description:
+        return "VOD_AMAZON"
+    elif "GEICO" in description:
+        return "CAR_INSURANCE"
+    # Note: Check for "AMAZON PRIME" before general "AMAZON" keyword
+    # AWS and other specific Amazon services will be caught by software_desc list in PRIORITY 3
+    elif "AMAZON PRIME" in description:
+        return "AMAZON_PRIME"
+    elif "CHESS.COM" in description:
+        return "CHESS_SUBSCRIPTION"
+    elif "TCGPLAYER" in description or "MAKEPLAYINGCARDS" in description:
+        return "MTG"
+    elif "GOOGLE *PARAMOUNT" in description or "CBS MOBILE APP" in description:
+        return "PARAMOUNT_SUBSCRIPTION"
+    elif "ARTS TAX" in description:
+        return "PORTLAND_ARTS_TAX"
+    elif "DOMINO" in description:
+        return "DOMINOS"
+    elif "ENTERPRISE RENT" in description or "AMTRAK" in description:
+        return "OTHER_TRANSPORTATION"
+
+    # PRIORITY 3: Pattern lists (more specific lists before general ones)
     cc_payment_desc = [
         "PAYMENT THANK YOU-MOBILE",
         "AUTOMATIC PAYMENT - THANK",
         "PAYMENT THANK YOU - WEB",
     ]
+
+    ai_desc = ["CLAUDE.AI SUBSCRIPTION", "CHATGPT SUBSCRIPTION", "OPENAI"]
+
+    software_desc = [
+        "DNH*DOMAINS#3405924658",
+        "GOOGLE *Domains",
+        "AMAZON WEB SERVICES",
+        "DIGITALOCEAN.COM",
+    ]
+
+    car_maintenance_desc = ["LES SCHWAB TIRES #0243", "ODOT DMV2U", "DEQ VIP DEQ TOO"]
+
+    gas_desc = ["ASTRO", "SHELL", "76", "CHEVRON"]
 
     coffee_desc = [
         "SQ *COFFEE TIME",
@@ -227,56 +324,6 @@ def _categorize_individual_credit_card_transaction(description: str) -> str:
         "JACK IN THE BOX 7160",
     ]
 
-    eating_out_desc = [
-        "SQ *GASTRO MANIA",
-        "JOJO PEARL",
-        "TST* WILD CHILD PIZZA - F",
-        "MOMO YAMA",
-        "TST* SIZZLE PIE - WEST",
-        "TST* MISSISSIPPI STUDIOS",
-        "TST* 10 BARREL BREWING -",
-        "TST* SCOTTIE'S PIZZA PARL",
-        "TST* BREAKSIDE BREWERY -",
-        "TST* 10 BARREL PORTLAND N",
-        "TST* QDS",
-        "TST* SILVER HARBOR BREWIN",
-        "TST*RIVER PIG - PORTLAND",
-        "YAMA SUSHI AND SAKE BAR",
-        "BANNINGS RESTAURANT &amp; PIE",
-        "TST* GARDEN TAVERN",
-        "TST* FIRE ON THE MOUNTAIN",
-        "THE TRIPLE LINDY",
-        "SQ *SCOTTIE'S PIZZA PARLO",
-        "SQ *RANCH PIZZA SOUTHEAST ",
-        "PROST TAVERN PORTLAND",
-        "RINGSIDE STEAK HOUSE WEST",
-        "SQ *GROUND KONTROL CLASSI",
-        "SQ *RANCH PIZZA SOUTHEAST",
-        "SQ *BAERLIC SOUTHEAST",
-        "LOYAL LEGION",
-        "MARATHON TAVERNA",
-        "OX",
-        "LUCKY LABRADOR BEER HALL",
-        "K-TOWN KOREAN BBQ",
-        "PORTLAND CITY GRILL-PO",
-        "Hale Pele",
-        "SQ *UPRIGHT BREWING",
-        "SQ *FREELAND SPIRITS",
-        "SQ *JOHNS MARKETPLACE",
-        "9TH AVE MINI MART",
-        "ORGEATWORKS",
-        "AP MARKET",
-        "DIVISION FOOD MART PDX",
-        "ALBERTA STREET MARKET",
-        "SQ *UP NORTH SURF CLUB",
-        "RAYS FOOD PLACE #45",
-        "50TH MARKET ",
-        "GROUND KONTROL CLASSIC AR",
-        "KINGPINS - BEAVERTON - BO",
-        "BANNINGS RESTAURANT",
-        "RANCH PIZZA",
-    ]
-
     clothing_desc = [
         "NORDSTROM",
         "FJAELLRAEVEN",
@@ -331,134 +378,103 @@ def _categorize_individual_credit_card_transaction(description: str) -> str:
         "KITCHEN KABOODLE",
     ]
 
-    car_maintenance_desc = ["LES SCHWAB TIRES #0243", "ODOT DMV2U", "DEQ VIP DEQ TOO"]
-
-    ai_desc = ["CLAUDE.AI SUBSCRIPTION", "CHATGPT SUBSCRIPTION", "OPENAI"]
-
-    software_desc = [
-        "DNH*DOMAINS#3405924658",
-        "GOOGLE *Domains",
-        "AMAZON WEB SERVICES",
-        "DIGITALOCEAN.COM",
+    # eating_out_desc is intentionally last among food categories
+    # since it contains broad patterns that might match other things
+    eating_out_desc = [
+        "SQ *GASTRO MANIA",
+        "JOJO PEARL",
+        "TST* WILD CHILD PIZZA - F",
+        "MOMO YAMA",
+        "TST* SIZZLE PIE - WEST",
+        "TST* MISSISSIPPI STUDIOS",
+        "TST* 10 BARREL BREWING -",
+        "TST* SCOTTIE'S PIZZA PARL",
+        "TST* BREAKSIDE BREWERY -",
+        "TST* 10 BARREL PORTLAND N",
+        "TST* QDS",
+        "TST* SILVER HARBOR BREWIN",
+        "TST*RIVER PIG - PORTLAND",
+        "YAMA SUSHI AND SAKE BAR",
+        "BANNINGS RESTAURANT &amp; PIE",
+        "TST* GARDEN TAVERN",
+        "TST* FIRE ON THE MOUNTAIN",
+        "THE TRIPLE LINDY",
+        "SQ *SCOTTIE'S PIZZA PARLO",
+        "SQ *RANCH PIZZA SOUTHEAST ",
+        "PROST TAVERN PORTLAND",
+        "RINGSIDE STEAK HOUSE WEST",
+        "SQ *GROUND KONTROL CLASSI",
+        "SQ *RANCH PIZZA SOUTHEAST",
+        "SQ *BAERLIC SOUTHEAST",
+        "LOYAL LEGION",
+        "MARATHON TAVERNA",
+        "OX",
+        "LUCKY LABRADOR BEER HALL",
+        "K-TOWN KOREAN BBQ",
+        "PORTLAND CITY GRILL-PO",
+        "Hale Pele",
+        "SQ *UPRIGHT BREWING",
+        "SQ *FREELAND SPIRITS",
+        "SQ *JOHNS MARKETPLACE",
+        "9TH AVE MINI MART",
+        "ORGEATWORKS",
+        "AP MARKET",
+        "DIVISION FOOD MART PDX",
+        "ALBERTA STREET MARKET",
+        "SQ *UP NORTH SURF CLUB",
+        "RAYS FOOD PLACE #45",
+        "50TH MARKET ",
+        "GROUND KONTROL CLASSIC AR",
+        "KINGPINS - BEAVERTON - BO",
+        "BANNINGS RESTAURANT",
+        "RANCH PIZZA",
     ]
 
-    gas_desc = ["ASTRO", "SHELL", "76", "CHEVRON"]
-
+    # Check pattern lists in priority order
     if _match(cc_payment_desc):
         return "CREDIT_CARD_PAYMENT"
-    elif "SQ *OVATION COFFEE" in description:
-        return "OVATION"
+    elif _match(ai_desc):
+        return "AI_SUBSCRIPTION"
+    elif _match(software_desc):
+        return "HOSTING_SOFTWARE_PROJECTS"
+    elif _match(car_maintenance_desc):
+        return "CAR_MAINTENANCE"
+    elif _match(gas_desc):
+        return "GAS"
     elif _match(coffee_desc):
         return "OTHER_COFFEE_SHOPS"
     elif _match(lunch_desc):
         return "EATING_OUT_NBHD_LUNCH"
-    elif "DOMINO" in description:
-        return "DOMINOS"
     elif _match(concerts_desc):
         return "CONCERTS"
     elif _match(nbhd_bars_desc):
         return "NBHD_BARS"
-    elif "LYFT" in description or "UBER" in description:
-        return "RIDESHARE"
     elif _match(groceries_desc):
         return "GROCERIES"
-    elif "LIQUOR STORE" in description or "ROLLING RIVER SPIRITS" in description:
-        return "LIQUOR_STORE"
-    elif description == "PORTLAND GENERAL ELECTRIC":
-        return "PGE"
-    elif "LA FIT" in description:
-        return "GYM_MEMBERSHIP"
-    elif "SPOTIFY" in description:
-        return "SPOTIFY_MEMBERSHIP"
-    elif "COMCAST" in description:
-        return "COMCAST"
-    elif (
-        "SQ *MICHELLE THRASHER" in description
-        or "SQ *SLABTOWN BARBERSHOP" in description
-    ):
-        return "HAIRCUT"
-    elif description == "POWELL'S BURNSIDE":
-        return "POWELLS"
     elif _match(movies_desc):
         return "MOVIES"
     elif _match(wedding_desc):
         return "WEDDING"
     elif _match(fast_food_desc):
         return "FAST_FOOD"
-    elif _match(eating_out_desc):
-        return "EATING_OUT"
     elif _match(clothing_desc):
         return "CLOTHES"
-    elif "ARSENAL" in description:
-        return "ARSENAL"
     elif _match(physical_media_desc):
         return "PHYSICAL_MEDIA"
-    elif description == "APPLE.COM/BILL":
-        return "APPLE_CLOUD_STORAGE"
     elif _match(hotels_desc):
         return "TRAVEL_LODGING"
     elif _match(flights_desc):
         return "FLIGHTS"
-    elif "PARKING" in description:
-        return "PARKING"
-    elif "MODA CENTER" in description:
-        return "MODA_CENTER"
-    elif description == "ROKU FOR WARNERMEDIA GLOB":
-        return "HBO_SUBSCRIPTION"
-    elif "PORTLAND INDOOR SOCCE" in description:
-        return "INDOOR_SOCCER"
     elif _match(gifts_desc):
         return "GIFTS"
     elif _match(home_improvement_desc):
         return "HOME_IMPROVEMENT"
-    elif "GORGE PERFORMANCE" in description or "SP TRAVELERSURFCLUB" in description:
-        return "SURFING"
-    elif "XBOX" in description or "PLAYSTATION" in description:
-        return "VIDEO_GAMES"
-    elif "WILLAMETTE DRY" in description:
-        return "DRY_CLEANING"
-    elif "PRIME VIDEO" in description or "GOOGLE *TV" in description:
-        return "VOD_AMAZON"
-    elif "GEICO" in description:
-        return "CAR_INSURANCE"
-    elif _match(car_maintenance_desc):
-        return "CAR_MAINTENANCE"
-    elif _match(software_desc):
-        return "HOSTING_SOFTWARE_PROJECTS"
-    elif _match(ai_desc):
-        return "AI_SUBSCRIPTION"
-    elif "AMAZON PRIME" in description:
-        return "AMAZON_PRIME"
+    # Check eating_out last since it has broad patterns
+    elif _match(eating_out_desc):
+        return "EATING_OUT"
+    # Check very broad AMAZON pattern after all specific checks
     elif "AMAZON" in description or "AMZN" in description:
         return "AMAZON_PURCHASE"
-    elif "CHESS.COM" in description:
-        return "CHESS_SUBSCRIPTION"
-    elif "TCGPLAYER" in description or "MAKEPLAYINGCARDS" in description:
-        return "MTG"
-    elif description == "ROKU FOR PEACOCK TV LLC":
-        return "PEACOCK_SUBSCRIPTION"
-    elif "GOOGLE *PARAMOUNT" in description or "CBS MOBILE APP" in description:
-        return "PARAMOUNT_SUBSCRIPTION"
-    elif _match(gas_desc):
-        return "GAS"
-    elif description == "HRB ONLINE TAX PRODUCT":
-        return "FILING_TAXES"
-    elif description == "JEWELERS-MUTUAL-PMNT":
-        return "DIAMOND_INSURANCE"
-    elif description == "BLAZERVISION":
-        return "BLAZER_VISION_SUBSCRIPTION"
-    elif description == "DUNCD ON PRIME":
-        return "PODCAST_SUBSCRIPTION"
-    elif "ARTS TAX" in description:
-        return "PORTLAND_ARTS_TAX"
-    elif "OPAL CAMERA" in description:
-        return "COMPUTERS_TECHNOLOGY_HARDWARE"
-    elif "USPS PO" in description or "FEDEX OFFIC" in description:
-        return "SHIPPING"
-    elif "RODEO" in description:
-        return "RODEO"
-    elif "ENTERPRISE RENT" in description or "AMTRAK" in description:
-        return "OTHER_TRANSPORTATION"
     else:
         return "OTHER"
 
