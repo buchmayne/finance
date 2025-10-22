@@ -1,10 +1,11 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
+from matplotlib.figure import Figure
 
 
 # Visualization Functions
-def plot_monthly_spending_by_category(df: pd.DataFrame) -> plt.figure:
+def plot_monthly_spending_by_category(df: pd.DataFrame) -> Figure:
     """
     df = calculate_average_monthly_spending_by_meta_category(
         db, period, include_wedding
@@ -44,7 +45,7 @@ def plot_monthly_spending_by_category(df: pd.DataFrame) -> plt.figure:
     return fig
 
 
-def plot_monthly_budget_history(df: pd.DataFrame) -> plt.Figure:
+def plot_monthly_budget_history(df: pd.DataFrame) -> Figure:
     """
     df = calculate_monthly_budget_history(db, period, include_wedding)
     """
@@ -146,7 +147,7 @@ def plot_monthly_budget_history(df: pd.DataFrame) -> plt.Figure:
     return fig
 
 
-def plot_average_monthly_budget(df: pd.DataFrame) -> plt.Figure:
+def plot_average_monthly_budget(df: pd.DataFrame) -> Figure:
     """
     df = calculate_average_monthly_budget(db, period, include_wedding)
     """
@@ -238,7 +239,7 @@ def plot_average_monthly_budget(df: pd.DataFrame) -> plt.Figure:
     return fig
 
 
-def plot_average_monthly_eating_out_spend_by_category(df: pd.DataFrame) -> plt.Figure:
+def plot_average_monthly_eating_out_spend_by_category(df: pd.DataFrame) -> Figure:
     """
     df = calculate_average_monthly_spend_eating_out_by_category(db, period)
     """
