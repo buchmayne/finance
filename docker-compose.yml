@@ -2,13 +2,15 @@ version: '3.8'
 
 services:
   api:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile.api
     ports:
       - "8000:8000"
     volumes:
       - ./api:/app/api
+      - ./frontend:/app/frontend
+      - ./etl:/app/etl
       - ./pyproject.toml:/app/pyproject.toml
       - ./uv.lock:/app/uv.lock
     environment:

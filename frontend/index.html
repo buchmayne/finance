@@ -5,12 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FINANCIAL CONTROL INTERFACE</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-  <link rel="stylesheet" href="frontend/style.css">
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
   <div class="controls">
     <button id="refreshBtn">REFRESH [R]</button>
     <button id="toggleAutoRefresh">AUTO: OFF</button>
+    <button id="weddingToggle">WEDDING: OFF</button>
+    <select id="periodSelect">
+      <option value="last_1_months">Last 1 Month</option>
+      <option value="last_3_months" selected>Last 3 Months</option>
+      <option value="last_6_months">Last 6 Months</option>
+      <option value="last_12_months">Last 12 Months</option>
+      <option value="ytd">Year to Date</option>
+      <option value="full_history">Full History</option>
+    </select>
   </div>
 
   <div class="header">
@@ -19,25 +28,9 @@
   </div>
 
   <div class="dashboard">
-    <!-- Account Balance Panel -->
-    <div class="panel">
-      <div class="panel-header">ACCOUNT BALANCE</div>
-      <div class="metric-large" id="totalBalance">$0.00</div>
-      <div class="metric-grid">
-        <div class="metric-item">
-          <div class="metric-label">CHECKING</div>
-          <div class="metric-value" id="checking">$0.00</div>
-        </div>
-        <div class="metric-item">
-          <div class="metric-label">SAVINGS</div>
-          <div class="metric-value" id="savings">$0.00</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Monthly Summary Panel -->
-    <div class="panel">
-      <div class="panel-header">MONTHLY SUMMARY</div>
+    <!-- Average Monthly Budget Panel -->
+    <div class="panel wide">
+      <div class="panel-header">AVERAGE MONTHLY BUDGET</div>
       <div class="metric-grid">
         <div class="metric-item">
           <div class="metric-label">INCOME</div>
@@ -48,12 +41,8 @@
           <div class="metric-value alert" id="monthlyExpenses">$0.00</div>
         </div>
         <div class="metric-item">
-          <div class="metric-label">NET</div>
+          <div class="metric-label">NET CASH FLOW</div>
           <div class="metric-value" id="monthlyNet">$0.00</div>
-        </div>
-        <div class="metric-item">
-          <div class="metric-label">BUDGET REMAIN</div>
-          <div class="metric-value" id="budgetRemain">$0.00</div>
         </div>
       </div>
     </div>
@@ -83,24 +72,24 @@
 
     <!-- Spending by Category Chart -->
     <div class="panel wide">
-      <div class="panel-header">SPENDING BY CATEGORY - CURRENT MONTH</div>
+      <div class="panel-header">AVERAGE MONTHLY SPENDING BY CATEGORY</div>
       <canvas id="categoryChart"></canvas>
     </div>
 
-    <!-- Recent Transactions Table -->
+    <!-- Monthly Budget History Table -->
     <div class="panel wide tall">
-      <div class="panel-header">RECENT TRANSACTIONS</div>
+      <div class="panel-header">MONTHLY BUDGET HISTORY</div>
       <div id="transactionsTable">
         <div class="loading">LOADING DATA</div>
       </div>
     </div>
 
-    <!-- Balance Trend Chart -->
+    <!-- Cumulative Savings Trend Chart -->
     <div class="panel">
-      <div class="panel-header">BALANCE TREND - 30 DAYS</div>
+      <div class="panel-header">CUMULATIVE SAVINGS TREND</div>
       <canvas id="balanceTrendChart"></canvas>
     </div>
   </div>
-  <script type="module" src="frontend/script.js"></script>
+  <script type="module" src="/static/script.js"></script>
 </body>
 </html>

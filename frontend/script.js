@@ -1,116 +1,35 @@
-// TypeScript-style code (will need transpilation in real project)
-
-// Data types
-const SampleTransaction = {
-    id: '',
-    date: '',
-    description: '',
-    category: '',
-    amount: 0,
-    account: ''
-};
-
-const SampleBalanceData = {
-    date: '',
-    balance: 0
-};
-
-const SampleCategorySpend = {
-    category: '',
-    amount: 0
-};
-
 // State
 let autoRefreshEnabled = false;
 let autoRefreshInterval = null;
+let currentPeriod = 'last_3_months';
+let includeWedding = false;
 
 // Initialize charts
 let categoryChart;
 let balanceTrendChart;
 
-// API fetch functions (replace with your actual API endpoints)
-async function fetchAccountBalances() {
-    // Replace with: return fetch('/api/balances').then(r => r.json());
-    return new Promise(resolve => {
-    setTimeout(() => {
-        resolve({
-        total: 45782.50,
-        checking: 12450.00,
-        savings: 33332.50
-        });
-    }, 500);
-    });
-}
-
-async function fetchMonthlySummary() {
-    // Replace with: return fetch('/api/summary/monthly').then(r => r.json());
-    return new Promise(resolve => {
-    setTimeout(() => {
-        resolve({
-        income: 8500.00,
-        expenses: 5234.67,
-        net: 3265.33,
-        budgetRemaining: 1450.00
-        });
-    }, 500);
-    });
-}
-
-async function fetchRecentTransactions() {
-    // Replace with: return fetch('/api/transactions/recent').then(r => r.json());
-    return new Promise(resolve => {
-    setTimeout(() => {
-        resolve([
-        { id: 'TX-9821', date: '2025-10-12', description: 'GROCERY STORE', category: 'FOOD', amount: -87.43, account: 'CHK' },
-        { id: 'TX-9820', date: '2025-10-11', description: 'PAYCHECK DEPOSIT', category: 'INCOME', amount: 4250.00, account: 'CHK' },
-        { id: 'TX-9819', date: '2025-10-10', description: 'ELECTRIC UTILITY', category: 'UTILITIES', amount: -142.56, account: 'CHK' },
-        { id: 'TX-9818', date: '2025-10-09', description: 'GAS STATION', category: 'TRANSPORT', amount: -52.00, account: 'CHK' },
-        { id: 'TX-9817', date: '2025-10-08', description: 'RESTAURANT', category: 'FOOD', amount: -65.20, account: 'CHK' },
-        { id: 'TX-9816', date: '2025-10-07', description: 'ONLINE SHOPPING', category: 'SHOPPING', amount: -129.99, account: 'CHK' },
-        { id: 'TX-9815', date: '2025-10-06', description: 'RENT PAYMENT', category: 'HOUSING', amount: -1850.00, account: 'CHK' },
-        { id: 'TX-9814', date: '2025-10-05', description: 'COFFEE SHOP', category: 'FOOD', amount: -8.50, account: 'CHK' }
-        ]);
-    }, 600);
-    });
-}
-
+// API fetch functions
 async function fetchCategorySpending() {
-    // Replace with: return fetch('/api/spending/categories').then(r => r.json());
-    const response = await fetch('/api/metrics/spending-by-category').then(r => r.json());
-    return response.json()
-    // return new Promise(resolve => {
-    // setTimeout(() => {
-    //     resolve([
-    //     { category: 'HOUSING', amount: 1850.00 },
-    //     { category: 'FOOD', amount: 682.45 },
-    //     { category: 'TRANSPORT', amount: 245.80 },
-    //     { category: 'UTILITIES', amount: 284.50 },
-    //     { category: 'SHOPPING', amount: 456.20 },
-    //     { category: 'ENTERTAINMENT', amount: 189.00 },
-    //     { category: 'OTHER', amount: 312.50 }
-    //     ]);
-    // }, 550);
-    // });
+    const response = await fetch(`/api/metrics/spending-by-category?period=${currentPeriod}&include_wedding=${includeWedding}`);
+    const data = await response.json();
+    // Transform data: meta_category -> category, avg_monthly_spend -> amount
+    return data.map(item => ({
+        category: item.meta_category,
+        amount: item.avg_monthly_spend,
+        pct: item.pct_of_avg_monthly_spend
+    }));
 }
 
-async function fetchBalanceTrend() {
-    // Replace with: return fetch('/api/balance/trend?days=30').then(r => r.json());
-    return new Promise(resolve => {
-    setTimeout(() => {
-        const data = [];
-        let balance = 42000;
-        for (let i = 30; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        balance += (Math.random() - 0.4) * 500;
-        data.push({
-            date: date.toISOString().split('T')[0],
-            balance: Math.round(balance * 100) / 100
-        });
-        }
-        resolve(data);
-    }, 600);
-    });
+async function fetchMonthlyBudgetHistory() {
+    const response = await fetch(`/api/metrics/monthly-budget-history?period=${currentPeriod}&include_wedding=${includeWedding}`);
+    const data = await response.json();
+    return data;
+}
+
+async function fetchAverageMonthlyBudget() {
+    const response = await fetch(`/api/metrics/average-monthly-budget?period=${currentPeriod}&include_wedding=${includeWedding}`);
+    const data = await response.json();
+    return data;
 }
 
 // Update UI functions
@@ -121,58 +40,62 @@ function updateTimestamp() {
     document.getElementById('lastSync').textContent = now.toTimeString().substring(0, 5);
 }
 
-function updateBalances(data) {
-    document.getElementById('totalBalance').textContent = `$${data.total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    document.getElementById('checking').textContent = `$${data.checking.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    document.getElementById('savings').textContent = `$${data.savings.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+function updateMonthlySummary(budgetData) {
+    // Extract income, spending, and cash flow from the budget data
+    const income = budgetData.find(item => item.description === 'SALARY');
+    const mortgageContrib = budgetData.find(item => item.description === 'MORTGAGE_CONTRIBUTION');
+    const cashFlow = budgetData.find(item => item.category === 'CASH_FLOW');
+    const spendingItems = budgetData.filter(item => item.category === 'SPENDING');
+
+    const totalIncome = income ? income.amount : 0;
+    const totalIncomeWithMortgage = totalIncome + (mortgageContrib ? mortgageContrib.amount : 0);
+    const totalExpenses = Math.abs(spendingItems.reduce((sum, item) => sum + item.amount, 0));
+    const netCashFlow = cashFlow ? cashFlow.amount : 0;
+
+    document.getElementById('monthlyIncome').textContent = `$${totalIncomeWithMortgage.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    document.getElementById('monthlyExpenses').textContent = `$${totalExpenses.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    document.getElementById('monthlyNet').textContent = `$${netCashFlow.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+    // Color code based on positive/negative
+    const netElement = document.getElementById('monthlyNet');
+    netElement.style.color = netCashFlow >= 0 ? '#00ff00' : '#ff0000';
 }
 
-function updateMonthlySummary(data) {
-    document.getElementById('monthlyIncome').textContent = `$${data.income.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    document.getElementById('monthlyExpenses').textContent = `$${data.expenses.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    document.getElementById('monthlyNet').textContent = `$${data.net.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    document.getElementById('budgetRemain').textContent = `$${data.budgetRemaining.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-}
-
-function updateTransactionsTable(transactions) {
+function updateBudgetHistoryTable(historyData) {
     const container = document.getElementById('transactionsTable');
-    
+
+    // Sort by year_month descending to show most recent first
+    const sortedData = [...historyData].sort((a, b) => b.year_month.localeCompare(a.year_month));
+
     const table = document.createElement('table');
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
-    
-    ['DATE', 'ID', 'DESCRIPTION', 'CATEGORY', 'AMOUNT', 'ACCT'].forEach(header => {
-    const th = document.createElement('th');
-    th.textContent = header;
-    th.addEventListener('click', () => sortTable(transactions, header.toLowerCase()));
-    headerRow.appendChild(th);
+
+    ['MONTH', 'SALARY', 'SPENDING', 'SAVINGS', 'CUMULATIVE'].forEach(header => {
+        const th = document.createElement('th');
+        th.textContent = header;
+        headerRow.appendChild(th);
     });
-    
+
     thead.appendChild(headerRow);
     table.appendChild(thead);
-    
+
     const tbody = document.createElement('tbody');
-    transactions.forEach(tx => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-        <td>${tx.date}</td>
-        <td>${tx.id}</td>
-        <td>${tx.description}</td>
-        <td>${tx.category}</td>
-        <td style="color: ${tx.amount < 0 ? '#ff0000' : '#00ff00'}">${tx.amount < 0 ? '-' : '+'}$${Math.abs(tx.amount).toFixed(2)}</td>
-        <td>${tx.account}</td>
-    `;
-    tbody.appendChild(row);
+    sortedData.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${row.year_month}</td>
+            <td style="color: #00ff00">$${(row.monthly_salary || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+            <td style="color: #ff0000">$${Math.abs(row.monthly_spending || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+            <td style="color: ${row.monthly_savings >= 0 ? '#00ff00' : '#ff0000'}">$${(row.monthly_savings || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+            <td style="color: ${row.cumulative_savings >= 0 ? '#00ff00' : '#ff0000'}">$${(row.cumulative_savings || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+        `;
+        tbody.appendChild(tr);
     });
-    
+
     table.appendChild(tbody);
     container.innerHTML = '';
     container.appendChild(table);
-}
-
-function sortTable(transactions, column) {
-    // Simple sort implementation - expand as needed
-    console.log(`Sorting by ${column}`);
 }
 
 function updateCategoryChart(data) {
@@ -231,79 +154,91 @@ function updateCategoryChart(data) {
     });
 }
 
-function updateBalanceTrendChart(data) {
+function updateBalanceTrendChart(historyData) {
     const ctx = document.getElementById('balanceTrendChart');
-    
+
     if (balanceTrendChart) {
-    balanceTrendChart.destroy();
+        balanceTrendChart.destroy();
     }
-    
+
+    // Sort data by year_month ascending for chronological order
+    const sortedData = [...historyData].sort((a, b) => a.year_month.localeCompare(b.year_month));
+
     balanceTrendChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: data.map(d => d.date),
-        datasets: [{
-        label: 'Balance',
-        data: data.map(d => d.balance),
-        borderColor: '#00ff00',
-        backgroundColor: 'rgba(0, 255, 0, 0.1)',
-        borderWidth: 2,
-        fill: true,
-        tension: 0.1,
-        pointRadius: 0
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-        legend: {
-            display: false
-        }
+        type: 'line',
+        data: {
+            labels: sortedData.map(d => d.year_month),
+            datasets: [{
+                label: 'Cumulative Savings',
+                data: sortedData.map(d => d.cumulative_savings || 0),
+                borderColor: '#00ff00',
+                backgroundColor: 'rgba(0, 255, 0, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.1,
+                pointRadius: 2
+            }]
         },
-        scales: {
-        y: {
-            grid: {
-            color: 'rgba(0, 255, 0, 0.2)'
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
             },
-            ticks: {
-            color: '#00ff00',
-            font: {
-                family: 'Courier New'
-            },
-            callback: function(value) {
-                return '$' + value.toLocaleString();
+            scales: {
+                y: {
+                    grid: {
+                        color: 'rgba(0, 255, 0, 0.2)'
+                    },
+                    ticks: {
+                        color: '#00ff00',
+                        font: {
+                            family: 'Courier New'
+                        },
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(0, 255, 0, 0.1)'
+                    },
+                    ticks: {
+                        color: '#00ff00',
+                        font: {
+                            family: 'Courier New'
+                        },
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                }
             }
-            }
-        },
-        x: {
-            display: false
         }
-        }
-    }
     });
 }
 
 // Main refresh function
 async function refreshData() {
     updateTimestamp();
-    
+
     try {
-    const [balances, summary, transactions, categorySpend, balanceTrend] = await Promise.all([
-        fetchAccountBalances(),
-        fetchMonthlySummary(),
-        fetchRecentTransactions(),
-        fetchCategorySpending(),
-        fetchBalanceTrend()
-    ]);
-    
-    updateBalances(balances);
-    updateMonthlySummary(summary);
-    updateTransactionsTable(transactions);
-    updateCategoryChart(categorySpend);
-    updateBalanceTrendChart(balanceTrend);
+        const [categorySpend, budgetHistory, avgBudget] = await Promise.all([
+            fetchCategorySpending(),
+            fetchMonthlyBudgetHistory(),
+            fetchAverageMonthlyBudget()
+        ]);
+
+        updateMonthlySummary(avgBudget);
+        updateCategoryChart(categorySpend);
+        updateBudgetHistoryTable(budgetHistory);
+        updateBalanceTrendChart(budgetHistory);
     } catch (error) {
-    console.error('Error refreshing data:', error);
+        console.error('Error refreshing data:', error);
+        // Update UI to show error state
+        document.getElementById('transactionsTable').innerHTML = `<div class="loading" style="color: #ff0000;">ERROR LOADING DATA: ${error.message}</div>`;
     }
 }
 
@@ -313,20 +248,39 @@ document.getElementById('refreshBtn').addEventListener('click', refreshData);
 document.getElementById('toggleAutoRefresh').addEventListener('click', function() {
     autoRefreshEnabled = !autoRefreshEnabled;
     this.textContent = `AUTO: ${autoRefreshEnabled ? 'ON' : 'OFF'}`;
-    
+
     if (autoRefreshEnabled) {
-    autoRefreshInterval = setInterval(refreshData, 30000); // Refresh every 30 seconds
+        autoRefreshInterval = setInterval(refreshData, 30000); // Refresh every 30 seconds
     } else {
-    if (autoRefreshInterval) {
-        clearInterval(autoRefreshInterval);
-    }
+        if (autoRefreshInterval) {
+            clearInterval(autoRefreshInterval);
+        }
     }
 });
+
+// Period selector
+const periodSelect = document.getElementById('periodSelect');
+if (periodSelect) {
+    periodSelect.addEventListener('change', function() {
+        currentPeriod = this.value;
+        refreshData();
+    });
+}
+
+// Wedding toggle
+const weddingToggle = document.getElementById('weddingToggle');
+if (weddingToggle) {
+    weddingToggle.addEventListener('click', function() {
+        includeWedding = !includeWedding;
+        this.textContent = `WEDDING: ${includeWedding ? 'ON' : 'OFF'}`;
+        refreshData();
+    });
+}
 
 // Keyboard shortcuts
 document.addEventListener('keydown', function(e) {
     if (e.key === 'r' || e.key === 'R') {
-    refreshData();
+        refreshData();
     }
 });
 
