@@ -22,14 +22,9 @@ logs: ## Tail logs from all services
 logs-api: ## Tail API logs only
 	docker-compose logs -f api
 
-logs-dashboard: ## Tail dashboard logs only
-	docker-compose logs -f dashboard
-
 shell-api: ## Open a shell in the API container
 	docker-compose exec api /bin/bash
 
-shell-dashboard: ## Open a shell in the dashboard container
-	docker-compose exec dashboard /bin/bash
 
 clean: ## Remove containers, volumes, and images
 	docker-compose down -v --rmi all
