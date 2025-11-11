@@ -25,16 +25,12 @@ class TestCSVImporter:
         importer = BankAccountCSVImporter()
         importer.db = temp_db
 
-        row1 = pd.Series({
-            'date': '2024-01-15',
-            'amount': 100.00,
-            'description': 'TEST TRANSACTION'
-        })
-        row2 = pd.Series({
-            'date': '2024-01-15',
-            'amount': 100.00,
-            'description': 'TEST TRANSACTION'
-        })
+        row1 = pd.Series(
+            {"date": "2024-01-15", "amount": 100.00, "description": "TEST TRANSACTION"}
+        )
+        row2 = pd.Series(
+            {"date": "2024-01-15", "amount": 100.00, "description": "TEST TRANSACTION"}
+        )
 
         id1 = importer._generate_id(row1)
         id2 = importer._generate_id(row2)
@@ -48,16 +44,20 @@ class TestCSVImporter:
         importer = BankAccountCSVImporter()
         importer.db = temp_db
 
-        row1 = pd.Series({
-            'date': '2024-01-15',
-            'amount': 100.00,
-            'description': 'TEST TRANSACTION 1'
-        })
-        row2 = pd.Series({
-            'date': '2024-01-15',
-            'amount': 100.00,
-            'description': 'TEST TRANSACTION 2'
-        })
+        row1 = pd.Series(
+            {
+                "date": "2024-01-15",
+                "amount": 100.00,
+                "description": "TEST TRANSACTION 1",
+            }
+        )
+        row2 = pd.Series(
+            {
+                "date": "2024-01-15",
+                "amount": 100.00,
+                "description": "TEST TRANSACTION 2",
+            }
+        )
 
         id1 = importer._generate_id(row1)
         id2 = importer._generate_id(row2)
@@ -65,12 +65,15 @@ class TestCSVImporter:
         assert id1 != id2
         importer.close()
 
-    @pytest.mark.parametrize("file_path,expected", [
-        ("data/Chase1234_bank.csv", "Chase1234"),
-        ("data/Chase 5678_bank.csv", "Chase5678"),
-        ("data/account_ending_in_9012.csv", None),  # Doesn't match regex patterns
-        ("data/no_account_here.csv", None),
-    ])
+    @pytest.mark.parametrize(
+        "file_path,expected",
+        [
+            ("data/Chase1234_bank.csv", "Chase1234"),
+            ("data/Chase 5678_bank.csv", "Chase5678"),
+            ("data/account_ending_in_9012.csv", None),  # Doesn't match regex patterns
+            ("data/no_account_here.csv", None),
+        ],
+    )
     def test_extract_chase_account(self, temp_db, file_path, expected):
         """Test account number extraction from file paths."""
         importer = BankAccountCSVImporter()
@@ -89,15 +92,17 @@ class TestBankAccountCSVImporter:
         importer = BankAccountCSVImporter()
         importer.db = temp_db
 
-        df = pd.DataFrame({
-            'date': ['01/15/2024', '02/20/2024'],
-            'amount': ['$100.00', '$200.00'],
-            'description': ['Test 1', 'Test 2']
-        })
+        df = pd.DataFrame(
+            {
+                "date": ["01/15/2024", "02/20/2024"],
+                "amount": ["$100.00", "$200.00"],
+                "description": ["Test 1", "Test 2"],
+            }
+        )
 
         cleaned = importer._clean_data(df)
 
-        assert pd.api.types.is_datetime64_any_dtype(cleaned['date'])
+        assert pd.api.types.is_datetime64_any_dtype(cleaned["date"])
         importer.close()
 
     def test_clean_data_removes_currency_symbols(self, temp_db):
@@ -105,16 +110,14 @@ class TestBankAccountCSVImporter:
         importer = BankAccountCSVImporter()
         importer.db = temp_db
 
-        df = pd.DataFrame({
-            'date': ['01/15/2024'],
-            'amount': ['$1,234.56'],
-            'description': ['Test']
-        })
+        df = pd.DataFrame(
+            {"date": ["01/15/2024"], "amount": ["$1,234.56"], "description": ["Test"]}
+        )
 
         cleaned = importer._clean_data(df)
 
-        assert cleaned['amount'].iloc[0] == 1234.56
-        assert pd.api.types.is_numeric_dtype(cleaned['amount'])
+        assert cleaned["amount"].iloc[0] == 1234.56
+        assert pd.api.types.is_numeric_dtype(cleaned["amount"])
         importer.close()
 
     def test_clean_data_fills_missing_descriptions(self, temp_db):
@@ -122,15 +125,13 @@ class TestBankAccountCSVImporter:
         importer = BankAccountCSVImporter()
         importer.db = temp_db
 
-        df = pd.DataFrame({
-            'date': ['01/15/2024'],
-            'amount': ['100.00'],
-            'description': [None]
-        })
+        df = pd.DataFrame(
+            {"date": ["01/15/2024"], "amount": ["100.00"], "description": [None]}
+        )
 
         cleaned = importer._clean_data(df)
 
-        assert cleaned['description'].iloc[0] == 'No description'
+        assert cleaned["description"].iloc[0] == "No description"
         importer.close()
 
     def test_import_csv_dry_run_does_not_save(self, temp_db, sample_bank_csv):
@@ -187,16 +188,14 @@ class TestCreditCardCSVImporter:
         importer = CreditCardCSVImporter()
         importer.db = temp_db
 
-        df = pd.DataFrame({
-            'date': ['01/15/2024'],
-            'amount': ['-100.00'],
-            'description': ['Test']
-        })
+        df = pd.DataFrame(
+            {"date": ["01/15/2024"], "amount": ["-100.00"], "description": ["Test"]}
+        )
 
         cleaned = importer._clean_data(df)
 
-        assert 'chase_category' in cleaned.columns
-        assert cleaned['chase_category'].iloc[0] == 'Other'
+        assert "chase_category" in cleaned.columns
+        assert cleaned["chase_category"].iloc[0] == "Other"
         importer.close()
 
     def test_import_csv_dry_run_does_not_save(self, temp_db, sample_credit_card_csv):
@@ -205,7 +204,9 @@ class TestCreditCardCSVImporter:
         importer.db = temp_db
 
         column_mapping = get_chase_credit_card_mapping()
-        df = importer.import_csv(str(sample_credit_card_csv), column_mapping, dry_run=True)
+        df = importer.import_csv(
+            str(sample_credit_card_csv), column_mapping, dry_run=True
+        )
 
         assert len(df) > 0
         count = temp_db.query(CreditCardTransaction).count()
@@ -218,7 +219,9 @@ class TestCreditCardCSVImporter:
         importer.db = temp_db
 
         column_mapping = get_chase_credit_card_mapping()
-        df = importer.import_csv(str(sample_credit_card_csv), column_mapping, dry_run=False)
+        df = importer.import_csv(
+            str(sample_credit_card_csv), column_mapping, dry_run=False
+        )
 
         assert len(df) > 0
         count = temp_db.query(CreditCardTransaction).count()
@@ -233,11 +236,15 @@ class TestCreditCardCSVImporter:
         column_mapping = get_chase_credit_card_mapping()
 
         # Import first time
-        df1 = importer.import_csv(str(sample_credit_card_csv), column_mapping, dry_run=False)
+        df1 = importer.import_csv(
+            str(sample_credit_card_csv), column_mapping, dry_run=False
+        )
         count1 = temp_db.query(CreditCardTransaction).count()
 
         # Import second time
-        df2 = importer.import_csv(str(sample_credit_card_csv), column_mapping, dry_run=False)
+        df2 = importer.import_csv(
+            str(sample_credit_card_csv), column_mapping, dry_run=False
+        )
         count2 = temp_db.query(CreditCardTransaction).count()
 
         assert count1 == count2
@@ -247,7 +254,7 @@ class TestCreditCardCSVImporter:
 class TestProcessCSVFile:
     """Test CSV file processing functions."""
 
-    @patch('etl.layers.raw.get_db')
+    @patch("etl.layers.raw.get_db")
     def test_process_csv_file_success(self, mock_get_db, temp_db, sample_bank_csv):
         """Test successful CSV file processing."""
         mock_get_db.return_value = temp_db
@@ -256,18 +263,15 @@ class TestProcessCSVFile:
         importer.db = temp_db
 
         result = process_csv_file(
-            importer,
-            str(sample_bank_csv),
-            AccountType.BANK_ACCOUNT,
-            dry_run=True
+            importer, str(sample_bank_csv), AccountType.BANK_ACCOUNT, dry_run=True
         )
 
-        assert result['status'] == 'success'
-        assert result['rows'] > 0
-        assert result['error'] is None
+        assert result["status"] == "success"
+        assert result["rows"] > 0
+        assert result["error"] is None
         importer.close()
 
-    @patch('etl.layers.raw.get_db')
+    @patch("etl.layers.raw.get_db")
     def test_process_csv_file_handles_errors(self, mock_get_db, temp_db, tmp_path):
         """Test that processing errors are caught and reported."""
         mock_get_db.return_value = temp_db
@@ -280,22 +284,19 @@ class TestProcessCSVFile:
         importer.db = temp_db
 
         result = process_csv_file(
-            importer,
-            str(bad_csv),
-            AccountType.BANK_ACCOUNT,
-            dry_run=True
+            importer, str(bad_csv), AccountType.BANK_ACCOUNT, dry_run=True
         )
 
-        assert result['status'] == 'error'
-        assert result['error'] is not None
+        assert result["status"] == "error"
+        assert result["error"] is not None
         importer.close()
 
 
 class TestBatchProcessing:
     """Test batch CSV processing functions."""
 
-    @patch('etl.layers.raw.PathCSVDirectories.bank_accounts_dir')
-    @patch('etl.layers.raw.get_db')
+    @patch("etl.layers.raw.PathCSVDirectories.bank_accounts_dir")
+    @patch("etl.layers.raw.get_db")
     def test_import_bank_accounts_processes_all_files(
         self, mock_get_db, mock_path, temp_db, tmp_path
     ):
@@ -312,7 +313,7 @@ DEBIT,01/15/2024,TEST TRANSACTION,100.00,DEBIT,1000.00,
             csv_file.write_text(csv_content)
 
         # Mock the PathCSVDirectories to return our temp path
-        with patch('etl.layers.raw.PathCSVDirectories') as mock_dirs:
+        with patch("etl.layers.raw.PathCSVDirectories") as mock_dirs:
             mock_dirs.bank_accounts_dir = tmp_path
             # This would normally process files - we're just testing it runs
             # The actual function prints to stdout, so we can't easily assert

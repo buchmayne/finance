@@ -39,24 +39,28 @@ class TestHealthEndpoint:
 class TestSpendingByCategoryEndpoint:
     """Test spending by category endpoint."""
 
-    @patch('api.app.calculate_average_monthly_spending_by_meta_category')
+    @patch("api.app.calculate_average_monthly_spending_by_meta_category")
     def test_spending_by_category_returns_200(self, mock_calculate, client):
         """Test that spending by category endpoint returns 200."""
-        mock_calculate.return_value = pd.DataFrame({
-            'meta_category': ['GROCERIES', 'TRAVEL'],
-            'avg_monthly_spend': [200.0, 300.0]
-        })
+        mock_calculate.return_value = pd.DataFrame(
+            {
+                "meta_category": ["GROCERIES", "TRAVEL"],
+                "avg_monthly_spend": [200.0, 300.0],
+            }
+        )
 
         response = client.get("/api/metrics/spending-by-category")
         assert response.status_code == 200
 
-    @patch('api.app.calculate_average_monthly_spending_by_meta_category')
+    @patch("api.app.calculate_average_monthly_spending_by_meta_category")
     def test_spending_by_category_returns_list(self, mock_calculate, client):
         """Test that endpoint returns a list of records."""
-        mock_calculate.return_value = pd.DataFrame({
-            'meta_category': ['GROCERIES', 'TRAVEL'],
-            'avg_monthly_spend': [200.0, 300.0]
-        })
+        mock_calculate.return_value = pd.DataFrame(
+            {
+                "meta_category": ["GROCERIES", "TRAVEL"],
+                "avg_monthly_spend": [200.0, 300.0],
+            }
+        )
 
         response = client.get("/api/metrics/spending-by-category")
         data = response.json()
@@ -64,13 +68,14 @@ class TestSpendingByCategoryEndpoint:
         assert isinstance(data, list)
         assert len(data) == 2
 
-    @patch('api.app.calculate_average_monthly_spending_by_meta_category')
-    def test_spending_by_category_accepts_period_parameter(self, mock_calculate, client):
+    @patch("api.app.calculate_average_monthly_spending_by_meta_category")
+    def test_spending_by_category_accepts_period_parameter(
+        self, mock_calculate, client
+    ):
         """Test that endpoint accepts period parameter."""
-        mock_calculate.return_value = pd.DataFrame({
-            'meta_category': ['GROCERIES'],
-            'avg_monthly_spend': [200.0]
-        })
+        mock_calculate.return_value = pd.DataFrame(
+            {"meta_category": ["GROCERIES"], "avg_monthly_spend": [200.0]}
+        )
 
         response = client.get("/api/metrics/spending-by-category?period=last_12_months")
         assert response.status_code == 200
@@ -78,21 +83,18 @@ class TestSpendingByCategoryEndpoint:
         # Verify the function was called with correct period
         mock_calculate.assert_called_once()
         args = mock_calculate.call_args
-        assert args[0][1] == 'last_12_months'  # period parameter
+        assert args[0][1] == "last_12_months"  # period parameter
 
-    @patch('api.app.calculate_average_monthly_spending_by_meta_category')
+    @patch("api.app.calculate_average_monthly_spending_by_meta_category")
     def test_spending_by_category_accepts_include_wedding_parameter(
         self, mock_calculate, client
     ):
         """Test that endpoint accepts include_wedding parameter."""
-        mock_calculate.return_value = pd.DataFrame({
-            'meta_category': ['GROCERIES'],
-            'avg_monthly_spend': [200.0]
-        })
-
-        response = client.get(
-            "/api/metrics/spending-by-category?include_wedding=false"
+        mock_calculate.return_value = pd.DataFrame(
+            {"meta_category": ["GROCERIES"], "avg_monthly_spend": [200.0]}
         )
+
+        response = client.get("/api/metrics/spending-by-category?include_wedding=false")
         assert response.status_code == 200
 
         # Verify the function was called with correct parameter
@@ -100,58 +102,57 @@ class TestSpendingByCategoryEndpoint:
         args = mock_calculate.call_args
         assert args[0][2] is False  # include_wedding parameter
 
-    @patch('api.app.calculate_average_monthly_spending_by_meta_category')
+    @patch("api.app.calculate_average_monthly_spending_by_meta_category")
     def test_spending_by_category_has_default_parameters(self, mock_calculate, client):
         """Test that endpoint has correct default parameters."""
-        mock_calculate.return_value = pd.DataFrame({
-            'meta_category': ['GROCERIES'],
-            'avg_monthly_spend': [200.0]
-        })
+        mock_calculate.return_value = pd.DataFrame(
+            {"meta_category": ["GROCERIES"], "avg_monthly_spend": [200.0]}
+        )
 
         response = client.get("/api/metrics/spending-by-category")
         assert response.status_code == 200
 
         # Verify defaults
         args = mock_calculate.call_args
-        assert args[0][1] == 'full_history'  # default period
+        assert args[0][1] == "full_history"  # default period
         assert args[0][2] is True  # default include_wedding
 
 
 class TestMonthlyBudgetHistoryEndpoint:
     """Test monthly budget history endpoint."""
 
-    @patch('api.app.calculate_monthly_budget_history')
+    @patch("api.app.calculate_monthly_budget_history")
     def test_monthly_budget_history_returns_200(self, mock_calculate, client):
         """Test that monthly budget history endpoint returns 200."""
-        mock_calculate.return_value = pd.DataFrame({
-            'year_month': ['2024-01', '2024-02'],
-            'monthly_spending': [1000, 1100],
-            'monthly_salary': [2500, 2500]
-        })
+        mock_calculate.return_value = pd.DataFrame(
+            {
+                "year_month": ["2024-01", "2024-02"],
+                "monthly_spending": [1000, 1100],
+                "monthly_salary": [2500, 2500],
+            }
+        )
 
         response = client.get("/api/metrics/monthly-budget-history")
         assert response.status_code == 200
 
-    @patch('api.app.calculate_monthly_budget_history')
+    @patch("api.app.calculate_monthly_budget_history")
     def test_monthly_budget_history_returns_list(self, mock_calculate, client):
         """Test that endpoint returns a list of records."""
-        mock_calculate.return_value = pd.DataFrame({
-            'year_month': ['2024-01'],
-            'monthly_spending': [1000]
-        })
+        mock_calculate.return_value = pd.DataFrame(
+            {"year_month": ["2024-01"], "monthly_spending": [1000]}
+        )
 
         response = client.get("/api/metrics/monthly-budget-history")
         data = response.json()
 
         assert isinstance(data, list)
 
-    @patch('api.app.calculate_monthly_budget_history')
+    @patch("api.app.calculate_monthly_budget_history")
     def test_monthly_budget_history_accepts_parameters(self, mock_calculate, client):
         """Test that endpoint accepts period and include_wedding parameters."""
-        mock_calculate.return_value = pd.DataFrame({
-            'year_month': ['2024-01'],
-            'monthly_spending': [1000]
-        })
+        mock_calculate.return_value = pd.DataFrame(
+            {"year_month": ["2024-01"], "monthly_spending": [1000]}
+        )
 
         response = client.get(
             "/api/metrics/monthly-budget-history"
@@ -160,54 +161,53 @@ class TestMonthlyBudgetHistoryEndpoint:
         assert response.status_code == 200
 
         args = mock_calculate.call_args
-        assert args[0][1] == 'last_6_months'
+        assert args[0][1] == "last_6_months"
         assert args[0][2] is False
 
 
 class TestAverageMonthlyBudgetEndpoint:
     """Test average monthly budget endpoint."""
 
-    @patch('api.app.calculate_average_monthly_budget')
+    @patch("api.app.calculate_average_monthly_budget")
     def test_average_monthly_budget_returns_200(self, mock_calculate, client):
         """Test that average monthly budget endpoint returns 200."""
-        mock_calculate.return_value = pd.DataFrame({
-            'description': ['GROCERIES', 'SALARY'],
-            'amount': [-200, 2500],
-            'category': ['SPENDING', 'INCOME']
-        })
+        mock_calculate.return_value = pd.DataFrame(
+            {
+                "description": ["GROCERIES", "SALARY"],
+                "amount": [-200, 2500],
+                "category": ["SPENDING", "INCOME"],
+            }
+        )
 
         response = client.get("/api/metrics/average-monthly-budget")
         assert response.status_code == 200
 
-    @patch('api.app.calculate_average_monthly_budget')
+    @patch("api.app.calculate_average_monthly_budget")
     def test_average_monthly_budget_returns_list(self, mock_calculate, client):
         """Test that endpoint returns a list of records."""
-        mock_calculate.return_value = pd.DataFrame({
-            'description': ['GROCERIES'],
-            'amount': [-200],
-            'category': ['SPENDING']
-        })
+        mock_calculate.return_value = pd.DataFrame(
+            {"description": ["GROCERIES"], "amount": [-200], "category": ["SPENDING"]}
+        )
 
         response = client.get("/api/metrics/average-monthly-budget")
         data = response.json()
 
         assert isinstance(data, list)
 
-    @patch('api.app.calculate_average_monthly_budget')
+    @patch("api.app.calculate_average_monthly_budget")
     def test_average_monthly_budget_has_default_parameters(
         self, mock_calculate, client
     ):
         """Test that endpoint has correct default parameters."""
-        mock_calculate.return_value = pd.DataFrame({
-            'description': ['GROCERIES'],
-            'amount': [-200]
-        })
+        mock_calculate.return_value = pd.DataFrame(
+            {"description": ["GROCERIES"], "amount": [-200]}
+        )
 
         response = client.get("/api/metrics/average-monthly-budget")
         assert response.status_code == 200
 
         args = mock_calculate.call_args
-        assert args[0][1] == 'full_history'  # default period
+        assert args[0][1] == "full_history"  # default period
         assert args[0][2] is False  # default include_wedding=False
 
 
@@ -220,8 +220,8 @@ class TestCORS:
             "/api/health",
             headers={
                 "Origin": "http://localhost:3000",
-                "Access-Control-Request-Method": "GET"
-            }
+                "Access-Control-Request-Method": "GET",
+            },
         )
 
         # Check for CORS headers
@@ -229,10 +229,7 @@ class TestCORS:
 
     def test_cors_allows_all_origins(self, client):
         """Test that CORS allows all origins."""
-        response = client.get(
-            "/api/health",
-            headers={"Origin": "http://example.com"}
-        )
+        response = client.get("/api/health", headers={"Origin": "http://example.com"})
 
         # With allow_origins=["*"], all origins should be allowed
         assert "access-control-allow-origin" in response.headers
@@ -290,7 +287,7 @@ class TestAPIMetadata:
 class TestErrorHandling:
     """Test error handling in API endpoints."""
 
-    @patch('api.app.calculate_average_monthly_spending_by_meta_category')
+    @patch("api.app.calculate_average_monthly_spending_by_meta_category")
     def test_endpoint_handles_database_errors(self, mock_calculate, client):
         """Test that endpoints handle database errors gracefully."""
         # Simulate database error
@@ -301,7 +298,7 @@ class TestErrorHandling:
         with pytest.raises(Exception, match="Database connection error"):
             response = client.get("/api/metrics/spending-by-category")
 
-    @patch('api.app.calculate_average_monthly_spending_by_meta_category')
+    @patch("api.app.calculate_average_monthly_spending_by_meta_category")
     def test_endpoint_handles_empty_dataframes(self, mock_calculate, client):
         """Test that endpoints handle empty DataFrames."""
         mock_calculate.return_value = pd.DataFrame()
