@@ -97,7 +97,7 @@ def _categorize_individual_bank_transaction(description: str) -> str:
         return "CASH_DEPOSIT"
     elif description == "WITHDRAWAL 07/14":
         return "CASH_WITHDRAWL_FOR_WEDDING"
-    elif "WITHDRAWAL" in description:
+    elif "WITHDRAWAL" in description or "NON-CHASE ATM" in description:
         return "CASH_WITHDRAWL"
     elif "ALEX ELISE" in description:
         return "WEDDING_PHOTOGRAPHER"
@@ -155,6 +155,8 @@ def _categorize_individual_credit_card_transaction(description: str) -> str:
         return "PODCAST_SUBSCRIPTION"
     elif description == "ROKU FOR PEACOCK TV LLC":
         return "PEACOCK_SUBSCRIPTION"
+    elif description == "GOOGLE *APPLE TV":
+        return "APPLE_TV_SUBSCRIPTION"
 
     # PRIORITY 2: Keywords that need to be checked early (before broader patterns)
     # Check these before eating_out/general categories that might have partial matches
@@ -168,7 +170,7 @@ def _categorize_individual_credit_card_transaction(description: str) -> str:
         return "SHIPPING"
     elif "RODEO" in description:
         return "RODEO"
-    elif "OPAL CAMERA" in description:
+    elif "OPAL CAMERA" in description or "1201 COMPUTER REPAIR" in description:
         return "COMPUTERS_TECHNOLOGY_HARDWARE"
     elif "GORGE PERFORMANCE" in description or "SP TRAVELERSURFCLUB" in description:
         return "SURFING"
@@ -182,7 +184,10 @@ def _categorize_individual_credit_card_transaction(description: str) -> str:
         return "SPOTIFY_MEMBERSHIP"
     elif "COMCAST" in description:
         return "COMCAST"
-    elif "SQ *MICHELLE THRASHER" in description or "SQ *SLABTOWN BARBERSHOP" in description:
+    elif (
+        "SQ *MICHELLE THRASHER" in description
+        or "SQ *SLABTOWN BARBERSHOP" in description
+    ):
         return "HAIRCUT"
     elif "ARSENAL" in description:
         return "ARSENAL"
@@ -229,7 +234,12 @@ def _categorize_individual_credit_card_transaction(description: str) -> str:
         "DIGITALOCEAN.COM",
     ]
 
-    car_maintenance_desc = ["LES SCHWAB TIRES #0243", "ODOT DMV2U", "DEQ VIP DEQ TOO"]
+    car_maintenance_desc = [
+        "LES SCHWAB TIRES #0243",
+        "ODOT DMV2U",
+        "DEQ VIP DEQ TOO",
+        "PHILS AUTO CLINIC INC",
+    ]
 
     gas_desc = ["ASTRO", "SHELL", "76", "CHEVRON"]
 
@@ -265,6 +275,9 @@ def _categorize_individual_credit_card_transaction(description: str) -> str:
         "TCKTWEB*GOATWHOREVITRI",
         "PP*GATES TO HELL",
         "SQ *VITRIOL",
+        "TM *JOHN MULANEY WITH",
+        "TCKTWEB*DYINGFETUSMUGS",
+        "PORTOLA FESTIVAL",
     ]
 
     nbhd_bars_desc = [
@@ -303,6 +316,7 @@ def _categorize_individual_credit_card_transaction(description: str) -> str:
         "HOLLYWOOD THEATRE",
         "LIVING ROOM THEATERS",
         "REGAL BRIDGEPORT  0652",
+        "REG LLOYD CENTER",
     ]
 
     wedding_desc = [
@@ -335,6 +349,7 @@ def _categorize_individual_credit_card_transaction(description: str) -> str:
         "SP WADE AND WILLIAMS",
         "SP ANDAFTERTHAT",
         "NORDSTROM #0025",
+        "SP CLASS TRIP",
     ]
 
     physical_media_desc = [
@@ -343,6 +358,7 @@ def _categorize_individual_credit_card_transaction(description: str) -> str:
         "BARNES&AMP;NOBLE PAPERSOURCE",
         "BARNES &AMP; NOBLE 2371",
         "MUSIC MILLENNIUM" "ARROW FILMS",
+        "STREETLIGHT RECORDS",
     ]
 
     hotels_desc = [
@@ -353,9 +369,12 @@ def _categorize_individual_credit_card_transaction(description: str) -> str:
         "MARRIOTT SN FRAN MARQU",
         "BEST WESTERN PONDEROSA",
         "HILTON",
+        "HOLIDAY INN",
+        "THE PORTER HOTEL",
+        "BKG*HOTEL AT BOOKING.C",
     ]
 
-    flights_desc = ["ALASKA AIR", "UNITED ", "AMERICAN AIR"]
+    flights_desc = ["ALASKA AIR", "UNITED ", "AMERICAN AIR", "SOUTHWES"]
 
     gifts_desc = [
         "PENDLETON",

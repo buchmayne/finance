@@ -86,6 +86,7 @@ def assign_categories_to_meta_categories(df: pd.DataFrame) -> pd.DataFrame:
         "BLAZER_VISION_SUBSCRIPTION",
         "PEACOCK_SUBSCRIPTION",
         "VIDEO_GAMES",
+        "APPLE_TV_SUBSCRIPTION",
     ]
 
     return df.assign(
