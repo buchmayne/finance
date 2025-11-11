@@ -254,6 +254,7 @@ def calculate_monthly_budget_history(
         calculate_monthly_spending(db, period, include_wedding)
         .merge(calculate_monthly_salary(db, period), how="left")
         .merge(calculate_monthly_saving(db, period), how="left")
+        .fillna(0) # avoid NaN when no savings in a given month
         .assign(cumulative_savings=lambda df_: df_["monthly_savings"].cumsum())
     )
 
